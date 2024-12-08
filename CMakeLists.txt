@@ -71,6 +71,10 @@ find_package(simdutf CONFIG REQUIRED)
 message("SIMDUTF_FOUND\t${SIMDUTF_FOUND}")
 message("SIMDUTF_VERSION\t${SIMDUTF_VERSION}")
 
+# dirent
+find_path(DIRENT_DIR NAMES dirent.h PATH_SUFFIXES dirent)
+message("DIRENT_DIR\t${DIRENT_DIR}")
+
 # Create a temporary Debug.h.in template
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Debug.h.in "#pragma once")
 configure_file(
@@ -144,19 +148,18 @@ target_link_libraries(LibRegex LibUnicode)
 set(LIBCORE_SOURCES
     "${LIB_SOURCE_DIR}/LibCore/ElapsedTimer.cpp"
     "${LIB_SOURCE_DIR}/LibCore/DateTime.cpp"
-
-    # "${LIB_SOURCE_DIR}/LibCore/SystemWindows.cpp"
-    # "${LIB_SOURCE_DIR}/LibCore/ConfigFile.cpp"
-    # "${LIB_SOURCE_DIR}/LibCore/Directory.cpp"
-    # "${LIB_SOURCE_DIR}/LibCore/DirectoryEntry.cpp"
-    # "${LIB_SOURCE_DIR}/LibCore/DirIterator.cpp"
-    # "${LIB_SOURCE_DIR}/LibCore/File.cpp"
+    "${LIB_SOURCE_DIR}/LibCore/File.cpp"
+    "${LIB_SOURCE_DIR}/LibCore/DirIterator.cpp"
+    "${LIB_SOURCE_DIR}/LibCore/SystemWindows.cpp"
+    "${LIB_SOURCE_DIR}/LibCore/Directory.cpp"
+    "${LIB_SOURCE_DIR}/LibCore/DirectoryEntry.cpp"
     # "${LIB_SOURCE_DIR}/LibCore/StandardPaths.cpp"
 )
 
 add_library(LibCore ${LIBCORE_SOURCES})
 target_include_directories(LibCore PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${DIRENT_DIR}
     ${MMAN_DIR}
     "${LIB_SOURCE_DIR}/LibGC"
     "${LIB_SOURCE_DIR}/LibGC/.."
@@ -171,6 +174,18 @@ target_include_directories(LibGC PRIVATE
     ${MMAN_DIR}
     "${LIB_SOURCE_DIR}/LibGC"
     "${LIB_SOURCE_DIR}/LibGC/.."
+    "${AK_SOURCE_DIR}/.."
+)
+
+# == LibFileSystem ==
+file(GLOB_RECURSE LIBFILESYSTEM_SOURCES "${LIB_SOURCE_DIR}/LibFileSystem/FileSystem.cpp")
+add_library(LibFileSystem ${LIBFILESYSTEM_SOURCES})
+target_include_directories(LibFileSystem PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${DIRENT_DIR}
+    ${MMAN_DIR}
+    "${LIB_SOURCE_DIR}/LibFileSystem"
+    "${LIB_SOURCE_DIR}/LibFileSystem/.."
     "${AK_SOURCE_DIR}/.."
 )
 
@@ -281,3 +296,4 @@ target_link_libraries(LibJSNet PRIVATE LibCrypto)
 target_link_libraries(LibJSNet PRIVATE LibJS)
 target_link_libraries(LibJSNet PRIVATE LibUnicode)
 target_link_libraries(LibJSNet PRIVATE LibRegex)
+target_link_libraries(LibJSNet PRIVATE LibFileSystem)
