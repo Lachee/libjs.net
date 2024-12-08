@@ -1,0 +1,37 @@
+# Temps
+*.swo
+*.swp
+*.config
+*.creator
+*.creator.user
+*.creator.user.*
+*.files
+*.includes
+*.cflags
+*.cxxflags
+*.autosave
+build*/
+Build*/
+Toolchain/Tarballs
+Toolchain/Build
+Toolchain/Local
+.vscode
+.vs
+.ccls-cache
+compile_commands.json
+.cache
+.clang_complete
+.clangd
+.idea/
+cmake-build-debug/
+output/
+.vim/
+.exrc
+.helix/
+
+dotnet/bin
+dotnet/obj
+
+# Keep last to ensure .DS_Store is never tracked, even if otherwise allowed by any exception above.
+.DS_Store
+
