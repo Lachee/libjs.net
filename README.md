@@ -28,3 +28,6 @@ Look at the `Libraries/LibJS/Runtime/VM.cpp` patch as an example, it straight up
 2. build the project `build.bat`
 3. profit?
 
+### Platform Support
+This build was configured and made to work on Windows 🎉 
+Linux support will be updated soon, but since Ladybird already supports building linux shared libraries, it wasn't a major priority. Simply build LB and add the .so to the root of the binding directory.
