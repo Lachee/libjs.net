@@ -9,15 +9,11 @@
 #include <AK/ByteString.h>
 #include <AK/StringView.h>
 
-#ifndef _WIN32
-#include <cxxabi.h>
-#endif
-
 namespace AK {
 
 inline ByteString demangle(StringView name)
 {
-#ifdef _WIN32
+#ifdef AK_OS_WINDOWS
     return name.to_byte_string();
 #else
     // Unix-style demangling using abi::__cxa_demangle
