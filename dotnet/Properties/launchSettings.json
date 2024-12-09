@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "bindings": {
+      "commandName": "Project",
+      "workingDirectory": "./"
+    }
+  }
+}

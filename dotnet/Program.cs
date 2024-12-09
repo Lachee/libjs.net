@@ -1,36 +1,25 @@
-﻿// See https://aka.ms/new-console-template for more information
-// In your application's startup code
-// AppDomain.CurrentDomain.AssemblyLoad += (sender, args) => 
-// {
-//     Console.WriteLine($"Loaded Assembly: {args.LoadedAssembly.FullName}");
-// };
-
-// AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => 
-// {
-//     Console.WriteLine($"Attempting to resolve: {args.Name}");
-//     return null; // Or provide a custom resolution mechanism
-// };
-
-
+﻿// Just for debugging, we copy the latest binaries.
 string dest = "./bin/Debug/net8.0";
 foreach (string dependent in Directory.GetFiles("../Build/release"))
 {
     string extension = Path.GetExtension(dependent);
     if (extension == ".dll" || extension == ".so") {
         string dependentName = Path.GetFileName(dependent);
-        Console.WriteLine($"Copying {dependentName} to {dest}");
         System.IO.File.Copy(dependent, $"{dest}/{dependentName}", true);
     }
 }
 
-string script = @"
-    function add(a, b) {
-        return a + b;
-    }
-    const result = add(1, 2);
-    print('Result: ' + result);
-";
+// Register the callback "test"
+LibJS.RegisterFunction("test", () =>
+{
+    Console.WriteLine("We got a callback from C++!");
+});
 
-Console.WriteLine("Running script: \n\n" + script );
-var result = Bind.run_script(script);
-Console.WriteLine($"Result: {result}");
+string script = @"
+    const result = 420 - 351;
+    print('Result: ' + result);
+    invoke('test');
+";
+Console.WriteLine("\n--Executing script...");
+var result = LibJS.RunScript(script);
+Console.WriteLine("--Script Executed with status: {0}", result);

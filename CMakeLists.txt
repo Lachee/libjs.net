@@ -290,10 +290,8 @@ target_link_libraries(LibJSNet PRIVATE LibUnicode)
 target_link_libraries(LibJSNet PRIVATE LibRegex)
 target_link_libraries(LibJSNet PRIVATE LibFileSystem)
 if(WIN32)
-
     target_link_libraries(LibJSNet PRIVATE ${COMPILER_RT_LIBRARY})
     target_link_libraries(LibJSNet PRIVATE ${MMAN_LIB})
-
     target_link_libraries(LibJSNet PRIVATE ICU::i18n)
     target_link_libraries(LibJSNet PRIVATE ICU::uc)
     target_link_libraries(LibJSNet PRIVATE ICU::data)

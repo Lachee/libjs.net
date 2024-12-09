@@ -23,4 +23,5 @@
 
 ErrorOr<int> try_run_script(const char *data);
 
+extern "C" void register_function(const char* name, void* function);
 extern "C" int run_script(const char* data);
