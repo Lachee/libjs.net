@@ -1,7 +1,7 @@
 @echo off
 
 :: Build the project
-cmake --preset default . 
+cmake --preset windows . 
 cd build/release || exit /b 1
 ninja || exit /b 1
 cd ../../

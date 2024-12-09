@@ -19,4 +19,8 @@
 #    define STDERR_FILENO _fileno(stderr)
 #endif
 
+#include <AK/Error.h>
+
+ErrorOr<int> try_run_script(const char *data);
+
 extern "C" int run_script(const char* data);

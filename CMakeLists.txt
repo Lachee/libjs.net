@@ -29,18 +29,20 @@ add_cxx_compile_options(
     -Wno-unused-function
 )
 
-if(MSVC)
-    add_compile_options(/std:c++23)
-    set(CMAKE_C_COMPILER_WORKS 1)
-    set(CMAKE_CXX_COMPILER_WORKS 1)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /clang:-fno-exceptions")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-fno-exceptions")
-endif()
+if(WIN32)
+    if(MSVC)
+        add_compile_options(/std:c++23)
+        set(CMAKE_C_COMPILER_WORKS 1)
+        set(CMAKE_CXX_COMPILER_WORKS 1)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /clang:-fno-exceptions")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-fno-exceptions")
+    endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rtlib=compiler-rt")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rtlib=compiler-rt")
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rtlib=compiler-rt")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rtlib=compiler-rt")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rtlib=compiler-rt")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rtlib=compiler-rt")
+    endif()
 endif()
 
 #compiler-rt
@@ -48,9 +50,7 @@ find_library(COMPILER_RT_LIBRARY
     NAMES clang_rt.builtins-x86_64
     PATHS "C:/llvm/lib/clang/18/lib/windows"
 )
-
 message("COMPILER_RT_LIBRARY\t${COMPILER_RT_LIBRARY}")
-
 #mman
 find_path(MMAN_DIR NAMES sys/mman.h PATH_SUFFIXES mman)
 find_library(MMAN_LIB mman)
@@ -121,7 +121,7 @@ target_include_directories(LibCrypto PRIVATE
 # == LibUnicode ==
 file(GLOB_RECURSE LIBUNICODE_SOURCES "${LIB_SOURCE_DIR}/LibUnicode/*.cpp")
 add_library(LibUnicode ${LIBUNICODE_SOURCES})
-target_link_libraries(LibUnicode PRIVATE ICU::i18n ICU::uc ICU::data)
+target_link_libraries(LibUnicode PRIVATE ICU::i18n ICU::uc ICU::data simdutf::simdutf)
 target_include_directories(LibUnicode PRIVATE ${ICU_INCLUDE_DIRS})
 target_include_directories(LibUnicode PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -150,11 +150,16 @@ set(LIBCORE_SOURCES
     "${LIB_SOURCE_DIR}/LibCore/DateTime.cpp"
     "${LIB_SOURCE_DIR}/LibCore/File.cpp"
     "${LIB_SOURCE_DIR}/LibCore/DirIterator.cpp"
-    "${LIB_SOURCE_DIR}/LibCore/SystemWindows.cpp"
     "${LIB_SOURCE_DIR}/LibCore/Directory.cpp"
     "${LIB_SOURCE_DIR}/LibCore/DirectoryEntry.cpp"
     # "${LIB_SOURCE_DIR}/LibCore/StandardPaths.cpp"
 )
+
+if(WIN32)
+    list(APPEND LIBCORE_SOURCES "${LIB_SOURCE_DIR}/LibCore/SystemWindows.cpp")
+else()
+    list(APPEND LIBCORE_SOURCES "${LIB_SOURCE_DIR}/LibCore/System.cpp")
+endif()
 
 add_library(LibCore ${LIBCORE_SOURCES})
 target_include_directories(LibCore PRIVATE
@@ -165,6 +170,7 @@ target_include_directories(LibCore PRIVATE
     "${LIB_SOURCE_DIR}/LibGC/.."
     "${AK_SOURCE_DIR}/.."
 )
+target_link_libraries(LibCore PUBLIC LibAK)
 
 # == LibGC ==
 file(GLOB_RECURSE LIBGC_SOURCES "${LIB_SOURCE_DIR}/LibGC/*.cpp")
@@ -176,6 +182,7 @@ target_include_directories(LibGC PRIVATE
     "${LIB_SOURCE_DIR}/LibGC/.."
     "${AK_SOURCE_DIR}/.."
 )
+target_link_libraries(LibGC PUBLIC LibCore)
 
 # == LibFileSystem ==
 file(GLOB_RECURSE LIBFILESYSTEM_SOURCES "${LIB_SOURCE_DIR}/LibFileSystem/FileSystem.cpp")
@@ -188,7 +195,6 @@ target_include_directories(LibFileSystem PRIVATE
     "${LIB_SOURCE_DIR}/LibFileSystem/.."
     "${AK_SOURCE_DIR}/.."
 )
-
 
 # == AK ==
 set(LIBAK_SOURCES
@@ -228,17 +234,16 @@ if(WIN32)
 else()
     list(APPEND LIBAK_SOURCES "${AK_SOURCE_DIR}/LexicalPath.cpp")
 endif()
-
 add_library(LibAK ${LIBAK_SOURCES})
 target_include_directories(LibAK PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MMAN_DIR}
     "${AK_SOURCE_DIR}/.."
 )
-target_link_libraries(LibAK PUBLIC
-    ${COMPILER_RT_LIBRARY}
-    simdutf::simdutf
-)
+target_link_libraries(LibAK PRIVATE simdutf::simdutf)
+if(WIN32)
+    target_link_libraries(LibAK PRIVATE ${COMPILER_RT_LIBRARY})
+endif()
 
 # == LibJS ==
 # -- Add all the files
@@ -246,7 +251,6 @@ file(GLOB_RECURSE LIBJS_SOURCES "${LIB_SOURCE_DIR}/LibJS/*.cpp")
 list(FILTER LIBJS_SOURCES EXCLUDE REGEX "Tests|Contrib")
 add_library(LibJS ${LIBJS_SOURCES})
 target_include_directories(LibJS PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MMAN_DIR}
     "${LIB_SOURCE_DIR}/LibJS"
@@ -254,46 +258,43 @@ target_include_directories(LibJS PRIVATE
     "${AK_SOURCE_DIR}/.."
 )
 # -- Link LIbraries. If we are on Windows, we also need DBHELP
-set(LIBJS_DEPS LibGC)
 if(!WIN32)
     #-- Linux specific flags
-    set(DBGHELP_LIB "")
     target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)
 else()
     # - Include demangling
     file(READ "src/AK/Demangle.h" FILE_CONTENT)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/AK/Demangle.h "${FILE_CONTENT}")
 endif()
-target_link_libraries(LibJS ${LIBJS_DEPS})
+target_link_libraries(LibJS LibGC LibCrypto LibCore LibAK LibUnicode LibFileSystem)
 
 # == LibJSNet ==
-add_library(LibJSNet SHARED
-    "${SRC_DIR}/LibJS.cpp"
-    "${SRC_DIR}/StandardIOStream.cpp"
-)
-target_compile_definitions(LibJSNet PRIVATE BUILDING_LIBJS)
-
+file(GLOB LIBJSNET_SOURCE src/*.cpp)
+add_library(LibJSNet SHARED ${LIBJSNET_SOURCE})
+# target_compile_definitions(LibJSNet PRIVATE BUILDING_LIBJS)
 target_include_directories(LibJSNet PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MMAN_DIR}
     ${SRC_DIR}
     "${AK_SOURCE_DIR}/.."
     "${LIB_SOURCE_DIR}/"
-    "${LIB_SOURCE_DIR}/LibGC/"
 )
 
-
-target_link_libraries(LibJSNet PRIVATE ${COMPILER_RT_LIBRARY})
-target_link_libraries(LibJSNet PRIVATE ${MMAN_LIB})
 target_link_libraries(LibJSNet PRIVATE simdutf::simdutf)
-target_link_libraries(LibJSNet PRIVATE ICU::i18n)
-target_link_libraries(LibJSNet PRIVATE ICU::uc)
-target_link_libraries(LibJSNet PRIVATE ICU::data)
+target_link_libraries(LibJSNet PRIVATE LibAK)
 target_link_libraries(LibJSNet PRIVATE LibGC)
 target_link_libraries(LibJSNet PRIVATE LibCore)
-target_link_libraries(LibJSNet PRIVATE LibAK)
 target_link_libraries(LibJSNet PRIVATE LibCrypto)
 target_link_libraries(LibJSNet PRIVATE LibJS)
 target_link_libraries(LibJSNet PRIVATE LibUnicode)
 target_link_libraries(LibJSNet PRIVATE LibRegex)
 target_link_libraries(LibJSNet PRIVATE LibFileSystem)
+if(WIN32)
+
+    target_link_libraries(LibJSNet PRIVATE ${COMPILER_RT_LIBRARY})
+    target_link_libraries(LibJSNet PRIVATE ${MMAN_LIB})
+
+    target_link_libraries(LibJSNet PRIVATE ICU::i18n)
+    target_link_libraries(LibJSNet PRIVATE ICU::uc)
+    target_link_libraries(LibJSNet PRIVATE ICU::data)
+endif()

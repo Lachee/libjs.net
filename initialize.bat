@@ -1,5 +1,5 @@
-git submodule update --init --recursive
+git submodule update
 patch.bat apply
-mkdir build
+mkdir Build
 cp -r ladybird/Toolchain Toolchain
-"Toolchain/BuildVcpkg.sh"
+python ./Toolchain/BuildVcpkg.py
