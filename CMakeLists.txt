@@ -271,7 +271,7 @@ if(!WIN32)
     target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)
 else()
     # - Include demangling
-    file(READ "src/AK/Demangle.h" FILE_CONTENT)
+    file(READ "AK/Demangle.h" FILE_CONTENT)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/AK/Demangle.h "${FILE_CONTENT}")
 endif()
 target_link_libraries(LibJS LibGC LibCrypto LibCore LibAK LibUnicode LibFileSystem)
@@ -283,10 +283,10 @@ add_library(LibJSNet SHARED ${LIBJSNET_SOURCE})
 target_include_directories(LibJSNet PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MMAN_DIR}
+    "${LADYBIRD_DIR}"
+    "${LIB_SOURCE_DIR}"
     ${SRC_DIR}
     ${SRC_DIR}/..
-    "${AK_SOURCE_DIR}/.."
-    "${LIB_SOURCE_DIR}/"
 )
 
 target_link_libraries(LibJSNet PRIVATE simdutf::simdutf)

@@ -10,7 +10,8 @@ foreach (string dependent in Directory.GetFiles("../Build/release"))
 }
 
 // Register the callback "test"
-LibJS.RegisterFunction("test", () =>
+if (false) {
+LibJS.Global.RegisterFunction("test", () =>
 {
     Console.WriteLine("We got a callback from C++!");
 });
@@ -21,5 +22,15 @@ string script = @"
     invoke('test');
 ";
 Console.WriteLine("\n--Executing script...");
-var result = LibJS.RunScript(script);
+var result = LibJS.Global.RunScript(script);
 Console.WriteLine("--Script Executed with status: {0}", result);
+}
+
+var environment = new LibJS.Environment();
+environment.OnInvoke += () =>
+{
+    Console.WriteLine("We got a callback from C++!");
+};
+environment.Run(@"
+    invoke('hello');
+");

@@ -1,20 +1,33 @@
 #pragma once
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <WinSock2.h>
+#define STDIN_FILENO _fileno(stdin)
+#define STDOUT_FILENO _fileno(stdout)
+#define STDERR_FILENO _fileno(stderr)
+#else
+#include <unistd.h>
+#define LIBJS_API
+#endif
+
+
 #include <AK/Stream.h>
-#include <cstdio>  // For FILE*, stdin, stdout, stderr
-#include <cerrno>  // For errno
+#include <cstdio> // For FILE*, stdin, stdout, stderr
+#include <cerrno> // For errno
 
-    /// Enumeration of standard stream types
-    enum class StreamType {
-        Input,   // Standard input stream
-        Output,  // Standard output stream
-        Error    // Standard error stream
-    };
+/// Enumeration of standard stream types
+enum class StreamType
+{
+    Input,  // Standard input stream
+    Output, // Standard output stream
+    Error   // Standard error stream
+};
 
-class StandardIOStream : public Stream {
+class StandardIOStream : public Stream
+{
 private:
-    FILE* m_file;        // Underlying file pointer
-    StreamType m_type;   // Type of the stream
+    FILE *m_file;      // Underlying file pointer
+    StreamType m_type; // Type of the stream
 
 public:
     /// Construct a StandardIOStream with a specific stream type
@@ -47,12 +60,12 @@ public:
     StreamType get_type() const;
 
     // Prevent copying
-    StandardIOStream(const StandardIOStream&) = delete;
-    StandardIOStream& operator=(const StandardIOStream&) = delete;
+    StandardIOStream(const StandardIOStream &) = delete;
+    StandardIOStream &operator=(const StandardIOStream &) = delete;
 
     // Allow move semantics
-    StandardIOStream(StandardIOStream&& other) noexcept;
-    StandardIOStream& operator=(StandardIOStream&& other) noexcept;
+    StandardIOStream(StandardIOStream &&other) noexcept;
+    StandardIOStream &operator=(StandardIOStream &&other) noexcept;
 
     /// Destructor
     ~StandardIOStream() = default;
