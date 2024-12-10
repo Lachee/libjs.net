@@ -15,7 +15,8 @@
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "ENABLE_QT": "OFF" 
             },
             "environment": {
                 "LADYBIRD_SOURCE_DIR": "${fileDir}/ladybird",
@@ -25,7 +26,7 @@
         },
         {
             "name": "windows",
-            "description": "Visual Studio IDE config (experimental)",
+            "description": "Ninja Configuration for Windows",
             "inherits": [ "default" ],
             "architecture": {
                 "value": "x64",
@@ -33,9 +34,29 @@
             },
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "ENABLE_QT": "OFF"
+                "CMAKE_CXX_COMPILER": "clang-cl"
             },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "intelliSenseMode": "windows-clang-x64"
+                }
+            },
+            "condition": {
+                "lhs": "${hostSystemName}",
+                "type": "equals",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows_vs",
+            "description": "Visual Studio IDE config (experimental)",
+            "inherits": [ "default" ],
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "toolset": "ClangCL",
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
                     "intelliSenseMode": "windows-clang-x64"

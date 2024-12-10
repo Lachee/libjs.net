@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
 project(LibJSNet)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(DOTNET_DIR "${CMAKE_SOURCE_DIR}/dotnet")
 set(LADYBIRD_DIR "$ENV{LADYBIRD_SOURCE_DIR}" CACHE STRING "Ladybird source directory")
@@ -18,16 +23,16 @@ message("CMAKE_TOOLCHAIN_FILE\t${CMAKE_TOOLCHAIN_FILE}")
 
 include("${LADYBIRD_DIR}/Meta/CMake/common_compile_options.cmake")
 include("${LADYBIRD_DIR}/Meta/CMake/lagom_compile_options.cmake")
-include("${LADYBIRD_DIR}/Meta/CMake/utils.cmake")
-
-#Compile Options
-add_definitions(-DLIBJS_SHARED)
 add_compile_definitions(_POSIX_SOURCE _POSIX_C_SOURCE)
-add_cxx_compile_options(
+add_compile_options(
     -Wno-unused-variable
     -Wno-unused-parameter
     -Wno-unused-function
 )
+include("${LADYBIRD_DIR}/Meta/CMake/utils.cmake")
+
+add_definitions(-DLIBJS_SHARED)
+
 
 if(WIN32)
     if(MSVC)
@@ -36,12 +41,15 @@ if(WIN32)
         set(CMAKE_CXX_COMPILER_WORKS 1)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /clang:-fno-exceptions")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-fno-exceptions")
-    endif()
-
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rtlib=compiler-rt")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rtlib=compiler-rt")
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rtlib=compiler-rt")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /DNDEBUG /Zi")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zc:inline")
+        string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rtlib=compiler-rt")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rtlib=compiler-rt")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rtlib=compiler-rt")
+        endif()
     endif()
 endif()
 
@@ -276,6 +284,7 @@ target_include_directories(LibJSNet PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MMAN_DIR}
     ${SRC_DIR}
+    ${SRC_DIR}/..
     "${AK_SOURCE_DIR}/.."
     "${LIB_SOURCE_DIR}/"
 )
