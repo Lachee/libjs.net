@@ -31,6 +31,11 @@ environment.OnInvoke += () =>
 {
     Console.WriteLine("We got a callback from C++!");
 };
+
 environment.Run(@"
-    invoke('hello');
+    const result = 420 - 351;
+    let second = result + 1;
+    let third = result - 1;
+    console.log(second);
+    print('Result: ' + result);
 ");

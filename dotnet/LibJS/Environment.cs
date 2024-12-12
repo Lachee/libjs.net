@@ -7,10 +7,13 @@ namespace LibJS
     public class Environment
     {
         const string LIB = "LibJSNet";
-        [DllImport(LIB)] static extern IntPtr create_environment();
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ActionPtr();
-        [DllImport(LIB)] static extern void set_invoke(IntPtr environment, IntPtr function);
-        [DllImport(LIB)] static extern void run(IntPtr environment, string source);
+        // [DllImport(LIB)] static extern IntPtr create_environment();
+        // [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ActionPtr();
+        // [DllImport(LIB)] static extern void set_invoke(IntPtr environment, IntPtr function);
+        // [DllImport(LIB)] static extern void run(IntPtr environment, string source);
+
+        [DllImport(LIB)] static extern IntPtr extern_create_environment();
+        [DllImport(LIB)] static extern bool extern_parse_and_run(IntPtr environment, string source);
 
         private IntPtr _environment;
 
@@ -18,13 +21,14 @@ namespace LibJS
 
         public Environment()
         {
-            _environment = create_environment();
-            ActionPtr externInvokeCallback = new ActionPtr(() => { OnInvoke?.Invoke(); });
-            set_invoke(_environment, Marshal.GetFunctionPointerForDelegate(externInvokeCallback));
+            _environment = extern_create_environment();
+            // ActionPtr externInvokeCallback = new ActionPtr(() => { OnInvoke?.Invoke(); });
+            // set_invoke(_environment, Marshal.GetFunctionPointerForDelegate(externInvokeCallback));
         }
-        
-        public void Run(string source) {
-            run(_environment, source);
+
+        public void Run(string source)
+        {
+            extern_parse_and_run(_environment, source);
         }
     }
 }

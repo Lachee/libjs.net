@@ -1,105 +1,130 @@
+#include "Forward.h"
 #include "Environment.h"
+#include "Window.h"
+#include "MainThreadVM.h"
 
-#include <AK/String.h>
-#include "LibJS/Runtime/Object.h"
+#include <AK/Format.h>
+#include <AK/Try.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Runtime/VM.h>
 
-
-bool Environment::initialize_vm() {
-  // VM initialization implementation
-  auto vm_or_error =  JS::VM::create(make<WebEngineCustomData>());
-  if (vm_or_error.is_error()) 
-    return false;
-
-  auto vm = vm_or_error.value();
-  this->m_vm_storage.get() = vm;
-  this->m_vm = this->m_vm_storage->ptr();
-  this->m_vm->heap().set_should_collect_on_every_allocation(true);
-  this->m_vm->set_dynamic_imports_allowed(false);
-  this->m_execution_context = JS::create_simple_execution_context<GlobalThis>(*this->m_vm);
-
-  auto& custom_data = verify_cast<WebEngineCustomData>(*vm->custom_data());
-  custom_data.container = this;
-  // custom_data.event_loop = s_main_thread_vm->heap().allocate<HTML::EventLoop>(type);
-  // custom_data.root_execution_context = move(this->m_execution_context);
-  // custom_data.internal_realm = 
-  return true;
-}
-
-JS::ThrowCompletionOr<JS::Value> Environment::execute(StringView source, StringView source_name) {
-  auto &vm = *this->m_vm;
-  auto &realm = *this->m_execution_context->realm;
-
-  JS::ThrowCompletionOr<JS::Value> result{JS::js_undefined()};
-
-  // Compile and run the script
-  auto script_or_error = JS::Script::parse(source, realm, source_name);
-  if (script_or_error.is_error()) {
-    auto error = script_or_error.error()[0];
-    auto hint = error.source_location_hint(source);
-    if (!hint.is_empty()) outln("{}", hint);
-
-    auto error_string = error.to_string();
-    outln("{}", error_string);
-    result = vm.throw_completion<JS::SyntaxError>(move(error_string));
-  } else {
-    auto script_or_module = script_or_error.value();
-    result = vm.bytecode_interpreter().run(*script_or_module);
-  }
-
-  return result;
-}
-
-extern "C" {  
-Environment *create_environment() {
-  auto vm_container = new Environment();
-  if (!vm_container->initialize_vm())
-    return nullptr;
-  return vm_container;
-}
-
-void set_invoke(Environment *vm, void *function_ptr) {
-  vm->m_invoke_function = function_ptr;
-}
-
-void run(Environment *vm, const char *source) {
-  auto source_sv = StringView{ source, strlen(source) };
-  auto result = vm->execute(source_sv, "run"sv);
-}
-
-// void set_function(VMContainer *vm, const char *name, void *function_ptr) {
-  // StringView view = StringView{name, strlen(name)};
-  // auto function_name = view.hash();
-  // function_map.set(function_name, reinterpret_cast<void (*)(void)>(function_ptr));
-// }
-}
-
-
-void GlobalThis::initialize(JS::Realm &realm) {
-  Base::initialize(realm);
-
-  define_direct_property("global", this, JS::Attribute::Enumerable);
-
-  u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-  // define_native_function(realm, "print", print, 1, attr);
-  // define_native_function(realm, "invoke", invoke, 1, attr);
-
-}
-
-
-JS_DEFINE_NATIVE_FUNCTION(GlobalThis::invoke) {
-  JS::Value name = vm.argument(0);
-  if (!name.is_string())
-    return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAString);
-
-  auto container = ((WebEngineCustomData *)(vm.custom_data()))->container;
-  reinterpret_cast<void(*)(void)>(container->m_invoke_function)();
-  return JS::js_undefined();
-}
-
-
-void WebEngineCustomData::spin_event_loop_until(GC::Root<GC::Function<bool()>> goal_condition)
+Environment::Environment(JS::Realm& realm)
+    : JS::GlobalObject(realm)
 {
-  // TODO: Implement event loop
-  // Platform::EventLoopPlugin::the().spin_until(move(goal_condition));
+}
+
+Environment::~Environment() = default;
+
+GC::Ref<Environment> Environment::create(JS::Realm& realm)
+{
+    return realm.create<Environment>(realm);
+}
+
+void Environment::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+}
+
+GC::Ref<Environment> Environment::create_and_initialize()
+{
+    printf("Creating and initializing environment\n");
+
+    GC::Ptr<GameWindow> window;
+
+    auto execution_context = create_execution_context(
+        [&](JS::Realm& realm) -> JS::Object* {
+            window = GameWindow::create(realm);
+            return window;
+        }, nullptr);
+
+
+    // 6. Set window to the global object of realmExecutionContext's Realm component.
+    // Im sure this is here for a reason. Ladybird does it so I will too - Lake.
+    window = verify_cast<GameWindow>(execution_context->realm->global_object());
+
+    auto environment = Environment::create(window->realm());
+    environment->m_window = window;
+    window->set_associated_environment(environment);
+
+    return environment;
+}
+
+ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_name)
+{
+    dbgln("Parsing and running '{}'", source_name);
+
+    auto& realm = shape().realm();
+    auto& vm = realm.vm();
+
+
+    JS::ThrowCompletionOr<JS::Value> result{ JS::js_undefined() };
+
+    auto run_script_or_module = [&](auto& script_or_module) {
+        // if (s_dump_ast)
+        // script_or_module->parse_node().dump(0);
+        auto module_execution_context = JS::ExecutionContext::create();
+        module_execution_context->realm = realm;
+        vm.push_execution_context(*module_execution_context);
+
+        result = vm.bytecode_interpreter().run(*script_or_module);
+        vm.pop_execution_context();
+
+        };
+
+    // Execution
+    auto script_or_error = JS::Script::parse(source, realm, source_name);
+    if (script_or_error.is_error()) {
+        auto error = script_or_error.error()[0];
+        auto hint = error.source_location_hint(source);
+        if (!hint.is_empty())
+            outln("{}", hint);
+
+        auto error_string = error.to_string();
+        outln("{}", error_string);
+        result = vm.throw_completion<JS::SyntaxError>(move(error_string));
+    }
+    else {
+        run_script_or_module(script_or_error.value());
+    }
+
+
+    // Error Handling
+    auto handle_exception = [&](JS::Value thrown_value) -> ErrorOr<void> {
+        warnln("Uncaught exception:");
+        TRY(print(thrown_value, PrintTarget::StandardError));
+        warnln();
+
+        if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
+            return {};
+        warnln("{}", static_cast<JS::Error const&>(thrown_value.as_object())
+            .stack_string(JS::CompactTraceback::Yes));
+        return {};
+        };
+
+
+    if (!result.is_error()) {
+
+    }
+    else {
+        VERIFY(result.throw_completion().value().has_value());
+        TRY(handle_exception(*result.release_error().value()));
+        return false;
+    }
+
+    // TRY(print(result.value()));
+    return true;
+}
+
+extern "C" {
+    Environment* extern_create_environment() {
+        return Environment::create_and_initialize().ptr();
+    }
+
+    bool extern_parse_and_run(Environment* enviornment, const char* source) {
+        auto run_or_errored = enviornment->parse_and_run(StringView{ source, strlen(source) }, "REPL"sv);
+        if (run_or_errored.is_error()) {
+            return false;
+        }
+        return run_or_errored.value();
+    }
 }
