@@ -27,5 +27,5 @@ public:
 
 extern "C" {
     Environment* extern_create_environment();
-    bool extern_parse_and_run(Environment* enviornment, const char* source);
+    bool extern_parse_and_run(Environment* enviornment, const char* source, const char* source_name);
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace LibJS
@@ -13,7 +14,7 @@ namespace LibJS
         // [DllImport(LIB)] static extern void run(IntPtr environment, string source);
 
         [DllImport(LIB)] static extern IntPtr extern_create_environment();
-        [DllImport(LIB)] static extern bool extern_parse_and_run(IntPtr environment, string source);
+        [DllImport(LIB)] static extern bool extern_parse_and_run(IntPtr environment, string source, string source_name);
 
         private IntPtr _environment;
 
@@ -26,9 +27,9 @@ namespace LibJS
             // set_invoke(_environment, Marshal.GetFunctionPointerForDelegate(externInvokeCallback));
         }
 
-        public void Run(string source)
+        public void Run(string source, string? sourceName = null)
         {
-            extern_parse_and_run(_environment, source);
+            extern_parse_and_run(_environment, source, sourceName ?? "Environment.Run(string, string)");
         }
     }
 }

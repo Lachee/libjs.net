@@ -14,5 +14,4 @@
 
 class Environment;
 class GameWindow;
-
-
+class LogClient;

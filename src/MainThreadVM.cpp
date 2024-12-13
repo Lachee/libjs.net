@@ -3,12 +3,12 @@
 static RefPtr<JS::VM> s_main_thread_vm;
 
 ErrorOr<void> initialize_main_thread_vm() {
-    dbgln("Creating a main thread vm");
+    dbgln("-- Creating a main thread vm");
     VERIFY(!s_main_thread_vm);
 
     s_main_thread_vm = TRY(JS::VM::create());
     s_main_thread_vm->on_unimplemented_property_access = [](auto const& object, auto const& property_key) {
-        dbgln("FIXME: Unimplemented IDL interface: '{}.{}'", object.class_name(), property_key.to_string());
+        warnln("-- FIXME: Unimplemented IDL interface: '{}.{}'", object.class_name(), property_key.to_string());
         };
 
 
@@ -27,7 +27,7 @@ ErrorOr<void> initialize_main_thread_vm() {
 
 JS::VM& main_thread_vm() {
     if (s_main_thread_vm.is_null()) {
-        dbgln("No main thread vm, creating one");
+        dbgln("-- No main thread vm, creating one");
         MUST(initialize_main_thread_vm());
     }
 

@@ -2,11 +2,13 @@
 #include "Environment.h"
 #include "Window.h"
 #include "MainThreadVM.h"
+#include "LogClient.h"
 
 #include <AK/Format.h>
 #include <AK/Try.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibJS/Runtime/ConsoleObject.h>
 
 Environment::Environment(JS::Realm& realm)
     : JS::GlobalObject(realm)
@@ -27,7 +29,7 @@ void Environment::initialize(JS::Realm& realm)
 
 GC::Ref<Environment> Environment::create_and_initialize()
 {
-    printf("Creating and initializing environment\n");
+    dbgln("-- Creating and initializing environment");
 
     GC::Ptr<GameWindow> window;
 
@@ -51,11 +53,14 @@ GC::Ref<Environment> Environment::create_and_initialize()
 
 ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_name)
 {
-    dbgln("Parsing and running '{}'", source_name);
+    dbgln("-- Parsing and running '{}'", source_name);
 
-    auto& realm = shape().realm();
+    auto& realm = window()->realm();
     auto& vm = realm.vm();
 
+    auto& console_object = *realm.intrinsics().console_object();
+    LogClient console_client(console_object.console());
+    console_object.console().set_client(console_client);
 
     JS::ThrowCompletionOr<JS::Value> result{ JS::js_undefined() };
 
@@ -91,7 +96,9 @@ ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_na
     // Error Handling
     auto handle_exception = [&](JS::Value thrown_value) -> ErrorOr<void> {
         warnln("Uncaught exception:");
-        TRY(print(thrown_value, PrintTarget::StandardError));
+        // TODO: Fix This
+        // auto strval = MUST(thrown_value.to_string(vm));
+        // warnln("{}", strval);
         warnln();
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
@@ -120,8 +127,8 @@ extern "C" {
         return Environment::create_and_initialize().ptr();
     }
 
-    bool extern_parse_and_run(Environment* enviornment, const char* source) {
-        auto run_or_errored = enviornment->parse_and_run(StringView{ source, strlen(source) }, "REPL"sv);
+    bool extern_parse_and_run(Environment* enviornment, const char* source, const char* source_name) {
+        auto run_or_errored = enviornment->parse_and_run(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             return false;
         }
