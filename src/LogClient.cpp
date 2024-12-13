@@ -23,7 +23,6 @@ void LogClient::end_group()
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> LogClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
-#if 1
     auto& g_vm = main_thread_vm();
     auto indent = MUST(String::repeated(' ', m_group_stack_depth * 2));
 
@@ -48,6 +47,8 @@ JS::ThrowCompletionOr<JS::Value> LogClient::printer(JS::Console::LogLevel log_le
     }
 
     auto output = TRY(generically_format_values(arguments.get<GC::MarkedVector<JS::Value>>()));
+    if (environment()->log(log_level, output))
+        return JS::js_undefined();
 
     switch (log_level) {
     case JS::Console::LogLevel::Debug:
@@ -71,7 +72,6 @@ JS::ThrowCompletionOr<JS::Value> LogClient::printer(JS::Console::LogLevel log_le
         outln("{}{}", indent, output);
         break;
     }
-#endif 
 
     return JS::js_undefined();
 }

@@ -3,7 +3,24 @@ using System.Runtime.InteropServices;
 
 namespace LibJS
 {
-
+    public enum LogLevel {
+        Assert = 0,
+        Count,
+        CountReset,
+        Debug,
+        Dir,
+        DirXML,
+        Error,
+        Group,
+        GroupCollapsed,
+        Info,
+        Log,
+        TimeEnd,
+        TimeLog,
+        Table,
+        Trace,
+        Warn,
+    };
 
     public class Environment
     {
@@ -16,15 +33,19 @@ namespace LibJS
         [DllImport(LIB)] static extern IntPtr extern_create_environment();
         [DllImport(LIB)] static extern bool extern_parse_and_run(IntPtr environment, string source, string source_name);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, string message);
+        [DllImport(LIB)] static extern void extern_set_on_console_log(IntPtr enviornment, IntPtr callback);
+
         private IntPtr _environment;
 
-        public event Action? OnInvoke;
+        public event Action<LogLevel, string>? OnLog;
 
         public Environment()
         {
             _environment = extern_create_environment();
-            // ActionPtr externInvokeCallback = new ActionPtr(() => { OnInvoke?.Invoke(); });
-            // set_invoke(_environment, Marshal.GetFunctionPointerForDelegate(externInvokeCallback));
+
+            OnLogCallback onLogCallback = new OnLogCallback((level, msg) => OnLog?.Invoke((LogLevel)level, msg));
+            extern_set_on_console_log(_environment, Marshal.GetFunctionPointerForDelegate(onLogCallback));
         }
 
         public void Run(string source, string? sourceName = null)

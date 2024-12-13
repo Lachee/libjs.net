@@ -51,6 +51,15 @@ GC::Ref<Environment> Environment::create_and_initialize()
     return environment;
 }
 
+bool Environment::log(JS::Console::LogLevel log_level, StringView content)
+{
+    if (m_on_console_log_ptr) {
+        m_on_console_log_ptr(log_level, content.characters_without_null_termination());
+        return true;
+    }
+    return false;
+}
+
 ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_name)
 {
     dbgln("-- Parsing and running '{}'", source_name);
@@ -59,8 +68,9 @@ ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_na
     auto& vm = realm.vm();
 
     auto& console_object = *realm.intrinsics().console_object();
-    LogClient console_client(console_object.console());
+    LogClient console_client(console_object.console(), *this);
     console_object.console().set_client(console_client);
+
 
     JS::ThrowCompletionOr<JS::Value> result{ JS::js_undefined() };
 
@@ -133,5 +143,9 @@ extern "C" {
             return false;
         }
         return run_or_errored.value();
+    }
+
+    void extern_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
+        environment->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
     }
 }
