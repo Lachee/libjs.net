@@ -24,33 +24,33 @@ namespace LibJS
 
     public class Environment
     {
-        const string LIB = "LibJSNet";
+        internal const string LibraryName = "LibJSNet";
         // [DllImport(LIB)] static extern IntPtr create_environment();
         // [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void ActionPtr();
         // [DllImport(LIB)] static extern void set_invoke(IntPtr environment, IntPtr function);
         // [DllImport(LIB)] static extern void run(IntPtr environment, string source);
 
-        [DllImport(LIB)] static extern IntPtr extern_create_environment();
-        [DllImport(LIB)] static extern bool extern_parse_and_run(IntPtr environment, string source, string source_name);
-
+        [DllImport(LibraryName)] static extern IntPtr e_environment_create();
+        [DllImport(LibraryName)] static extern IntPtr e_environment_evaluate(IntPtr environment, string source, string source_name);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, string message);
-        [DllImport(LIB)] static extern void extern_set_on_console_log(IntPtr enviornment, IntPtr callback);
+        [DllImport(LibraryName)] static extern void e_environment_set_on_console_log(IntPtr enviornment, IntPtr callback);
 
-        private IntPtr _environment;
+        private IntPtr m_ptr;
 
         public event Action<LogLevel, string>? OnLog;
 
         public Environment()
         {
-            _environment = extern_create_environment();
+            m_ptr = e_environment_create();
 
             OnLogCallback onLogCallback = new OnLogCallback((level, msg) => OnLog?.Invoke((LogLevel)level, msg));
-            extern_set_on_console_log(_environment, Marshal.GetFunctionPointerForDelegate(onLogCallback));
+            e_environment_set_on_console_log(m_ptr, Marshal.GetFunctionPointerForDelegate(onLogCallback));
         }
 
-        public void Run(string source, string? sourceName = null)
+        public Value Evaluate(string source, string? sourceName = null)
         {
-            extern_parse_and_run(_environment, source, sourceName ?? "Environment.Run(string, string)");
+            var ptr = e_environment_evaluate(m_ptr, source, sourceName ?? "Environment.Run(string, string)");
+            return new Value(ptr);
         }
     }
 }

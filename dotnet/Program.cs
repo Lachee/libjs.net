@@ -10,23 +10,6 @@ foreach (string dependent in Directory.GetFiles("../Build/release"))
     }
 }
 
-// Register the callback "test"
-if (false)
-{
-    LibJS.Global.RegisterFunction("test", () =>
-    {
-        Console.WriteLine("We got a callback from C++!");
-    });
-
-    string script = @"
-    const result = 420 - 351;
-    print('Result: ' + result);
-    invoke('test');
-";
-    Console.WriteLine("\n--Executing script...");
-    var result = LibJS.Global.RunScript(script);
-    Console.WriteLine("--Script Executed with status: {0}", result);
-}
 
 var environment = new LibJS.Environment();
 environment.OnLog += (level, message) =>
@@ -54,10 +37,13 @@ environment.OnLog += (level, message) =>
     Console.ResetColor();
 };
 
-environment.Run(@"
-    const result = 420 - 351;
-    let second = result + 1;
-    let third = result - 1;
-    console.log({result});
-    console.error('STICKY NESS!');
+var result = environment.Evaluate(@"
+    const a = 0.5;
+    const b = 0.1;
+    const c = a + b;
+    console.log(c);
+    c;
 ");
+Console.WriteLine($"ToString: {result}");
+Console.WriteLine($"Double: {result.asDouble() * 2}");
+Console.WriteLine("Press any key to exit...");

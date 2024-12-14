@@ -60,7 +60,7 @@ bool Environment::log(JS::Console::LogLevel log_level, StringView content)
     return false;
 }
 
-ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_name)
+ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_name)
 {
     dbgln("-- Parsing and running '{}'", source_name);
 
@@ -80,10 +80,8 @@ ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_na
         auto module_execution_context = JS::ExecutionContext::create();
         module_execution_context->realm = realm;
         vm.push_execution_context(*module_execution_context);
-
         result = vm.bytecode_interpreter().run(*script_or_module);
         vm.pop_execution_context();
-
         };
 
     // Execution
@@ -119,33 +117,30 @@ ErrorOr<bool> Environment::parse_and_run(StringView source, StringView source_na
         };
 
 
-    if (!result.is_error()) {
+    if (!result.is_error())
+        return result.value();
 
-    }
-    else {
-        VERIFY(result.throw_completion().value().has_value());
-        TRY(handle_exception(*result.release_error().value()));
-        return false;
-    }
-
-    // TRY(print(result.value()));
-    return true;
+    VERIFY(result.throw_completion().value().has_value());
+    TRY(handle_exception(*result.release_error().value()));
+    return Error::from_string_literal("Uncaught exception");
 }
 
 extern "C" {
-    Environment* extern_create_environment() {
+    Environment* e_environment_create() {
         return Environment::create_and_initialize().ptr();
     }
 
-    bool extern_parse_and_run(Environment* enviornment, const char* source, const char* source_name) {
-        auto run_or_errored = enviornment->parse_and_run(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
+    JS::Value* e_environment_evaluate(Environment* enviornment, const char* source, const char* source_name) {
+        auto run_or_errored = enviornment->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
-            return false;
+            warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
+            return nullptr;
         }
-        return run_or_errored.value();
+
+        return new JS::Value(run_or_errored.value());
     }
 
-    void extern_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
+    void e_environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
         environment->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
     }
 }

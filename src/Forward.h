@@ -15,3 +15,4 @@
 class Environment;
 class GameWindow;
 class LogClient;
+class InteropValue;

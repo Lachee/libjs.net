@@ -29,12 +29,12 @@ public:
         m_on_console_log_ptr = move(on_console_log);
     }
 
-    ErrorOr<bool> parse_and_run(StringView source, StringView source_name);
+    ErrorOr<JS::Value> evaluate(StringView source, StringView source_name);
 };
 
 
 extern "C" {
-    Environment* extern_create_environment();
-    bool extern_parse_and_run(Environment* enviornment, const char* source, const char* source_name);
-    void extern_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*));
+    Environment* e_environment_create();
+    JS::Value* e_environment_evaluate(Environment* enviornment, const char* source, const char* source_name);
+    void e_environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*));
 }
