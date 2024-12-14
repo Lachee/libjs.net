@@ -22,7 +22,7 @@ namespace LibJS
         private ushort Tag => m_tag ??= js_value_tag(m_ptr);
 
         private ulong? m_encoded;
-        public ulong Encoded => m_encoded ??= js_value_encoded(m_ptr);
+        private ulong Encoded => m_encoded ??= js_value_encoded(m_ptr);
 
         public bool IsAccessor => Tag == Flags.ACCESSOR_TAG;
         public bool IsBigInt => Tag == Flags.BIGINT_TAG;
