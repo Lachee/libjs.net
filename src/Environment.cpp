@@ -156,11 +156,15 @@ extern "C" {
         JS::PropertyKey key(keyName);
 
         auto function_object = AK::Function<JS::ThrowCompletionOr<JS::Value>(JS::VM&)>([function](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            dbgln("-- Running function");
             auto count = vm.argument_count();
             auto& realm = *vm.current_realm();
             auto arguments = TRY(JS::Array::create(realm, 0));
             for (size_t i = 0; i < count; i++) {
-                arguments->indexed_properties().append(vm.argument(i));
+                auto argument = vm.argument(i);
+                auto val = JS::Value(argument);
+                dbgln("---- Argument {}: {}", i, val.to_string_without_side_effects());
+                arguments->indexed_properties().append(val);
             }
 
             function(*arguments);

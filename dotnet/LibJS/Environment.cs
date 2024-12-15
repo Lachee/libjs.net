@@ -58,11 +58,14 @@ namespace LibJS
             environment_define_function(m_ptr, name, Marshal.GetFunctionPointerForDelegate(action));
         }
 
-        public Value Evaluate(string script, string? scriptName = null)
+        public Value? Evaluate(string script, string? scriptName = null)
         {
             var ptr = environmnet_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
             if (ptr == IntPtr.Zero)
                 throw new System.Exception("Failed to evaluate the script.");
+
+            if (ptr == IntPtr.Zero)
+                return null;
 
             return new Value(ptr);
         }

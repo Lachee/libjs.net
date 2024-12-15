@@ -1,40 +1,93 @@
-
-using System.Runtime.InteropServices;
+using System.Collections;
 
 namespace LibJS {
-    public class Object : IDisposable {
-
-        [DllImport(Environment.LibraryName)] protected static extern IntPtr js_object_get_property_value_at_index(IntPtr obj, int index);
-        [DllImport(Environment.LibraryName)] protected static extern IntPtr js_object_get_property_value(IntPtr obj, string name);
-
-        protected IntPtr m_ptr;
-
-        internal Object(IntPtr ptr)
-        {
-            m_ptr = ptr;
-        }
-
-        public Value GetProperty(int index)
-        {
-            return new Value(js_object_get_property_value_at_index(m_ptr, index));
-        }
-
-        public Value GetProperty(string name) {
-            return new Value(js_object_get_property_value(m_ptr, name));
-        }
-
-        public void Dispose()
-        {
-        }
-    }
-
-    public sealed class Array : Object
+    public sealed class Array : Object, IEnumerable<Value>, IList<Value>
     {
-        public int Count => GetProperty("length").asInt32();
-        public Value this[int index] => GetProperty(index);
+        private const string LengthName = "length";
+
+        public bool IsReadOnly => true;
+
+        public int Count => GetCount();
+
+        public Value this[int index] {
+            get  {
+                if (index < 0 || index >= Count)
+                    throw new IndexOutOfRangeException();
+                return GetProperty(index);
+            }
+            set => throw new NotImplementedException();
+        }
 
         internal Array(nint ptr) : base(ptr)
         {
+        }
+
+        /// <summary>
+        /// Gets the number of elements in the array
+        /// </summary>
+        /// <returns></returns>
+        public int GetCount() {
+            return GetProperty(LengthName).AsInt32();
+        }
+
+        public IEnumerator<Value> GetEnumerator()
+        {
+            int count = GetCount();
+            for (int i = 0; i < count; i++)
+            {
+                yield return GetProperty(i);
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        public int IndexOf(Value item)
+        {
+            int count = GetCount();
+            for (int i = 0; i < count; i++)
+            {
+                if (GetProperty(i) == item)
+                    return i;
+            }
+            return -1;
+        }
+
+        public void Insert(int index, Value item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(Value item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(Value item)
+        {
+            return IndexOf(item) >= 0;
+        }
+
+        public void CopyTo(Value[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(Value item)
+        {
+            throw new NotImplementedException();
         }
     }
 }
