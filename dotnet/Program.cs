@@ -37,11 +37,21 @@ environment.OnLog += (level, message) =>
     Console.ResetColor();
 };
 
+environment.DefineFunction("print", (env, args) =>
+{
+    Console.WriteLine("Custom function called 'print'");
+    for(int i = 0; i < args.Count; i++) {
+        Console.WriteLine("- Arg #{0}:\t{1}", i, args[i].ToString());
+    }
+});
 var result = environment.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
     const c = a + b;
-    console.log(c);
+    print('phill fish', 'is stinky');
+    const promise = new Promise((resolve, reject) => {
+        console.log('Promise Executions');
+    });
     c;
 ");
 Console.WriteLine($"ToString: {result}");

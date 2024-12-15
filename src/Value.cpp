@@ -1,6 +1,8 @@
 #include "Value.h"
 #include "MainThreadVM.h"
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PropertyKey.h>
 
 extern "C" {
     void js_value_free(JS::Value* value)
@@ -58,4 +60,21 @@ extern "C" {
     {
         return value->is_error();
     }
+
+    JS::Value* js_object_get_property_value_at_index(JS::Object* object, int index) {
+        JS::PropertyKey key(index);
+        auto result = object->get(key);
+        if (result.is_error())
+            return nullptr;
+        return new JS::Value(result.release_value());
+    }
+    JS::Value* js_object_get_property_value(JS::Object* object, const char* name) {
+        DeprecatedFlyString keyName(name);
+        JS::PropertyKey key(keyName);
+        auto result = object->get(key);
+        if (result.is_error())
+            return nullptr;
+        return new JS::Value(result.release_value());
+    }
+
 }

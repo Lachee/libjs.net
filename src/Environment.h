@@ -10,6 +10,7 @@ class Environment final : public JS::GlobalObject {
 
 private:
     GC::Ptr<GameWindow> m_window;
+    GC::Ptr<JS::Realm> m_realm;
     Function<void(JS::Console::LogLevel, const char*)> m_on_console_log_ptr{ nullptr };
 
 private:
@@ -23,6 +24,7 @@ public:
     static GC::Ref<Environment> create_and_initialize();
 
     GC::Ptr<GameWindow> window() { return m_window; }
+    GC::Ptr<JS::Realm> realm() { return m_realm; }
 
     bool log(JS::Console::LogLevel, StringView content);
     void set_on_console_log(Function<void(JS::Console::LogLevel, const char*)> on_console_log) {
@@ -34,7 +36,8 @@ public:
 
 
 extern "C" {
-    Environment* e_environment_create();
-    JS::Value* e_environment_evaluate(Environment* enviornment, const char* source, const char* source_name);
-    void e_environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*));
+    Environment* environment_create();
+    JS::Value* environmnet_evaluate(Environment* enviornment, const char* source, const char* source_name);
+    void environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*));
+    void environment_define_function(Environment* environment, const char* name, void (*function)(JS::Array&));
 }

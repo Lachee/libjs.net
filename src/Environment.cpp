@@ -8,10 +8,13 @@
 #include <AK/Try.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/PropertyKey.h>
 
 Environment::Environment(JS::Realm& realm)
-    : JS::GlobalObject(realm)
+    : JS::GlobalObject(realm),
+    m_realm(realm)
 {
 }
 
@@ -48,6 +51,10 @@ GC::Ref<Environment> Environment::create_and_initialize()
     environment->m_window = window;
     window->set_associated_environment(environment);
 
+    // Root level execution context
+    auto module_execution_context = JS::ExecutionContext::create();
+    module_execution_context->realm = window->realm();
+    main_thread_vm().push_execution_context(*module_execution_context);
     return environment;
 }
 
@@ -67,6 +74,7 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
     auto& realm = window()->realm();
     auto& vm = realm.vm();
 
+
     auto& console_object = *realm.intrinsics().console_object();
     LogClient console_client(console_object.console(), *this);
     console_object.console().set_client(console_client);
@@ -75,13 +83,7 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
     JS::ThrowCompletionOr<JS::Value> result{ JS::js_undefined() };
 
     auto run_script_or_module = [&](auto& script_or_module) {
-        // if (s_dump_ast)
-        // script_or_module->parse_node().dump(0);
-        auto module_execution_context = JS::ExecutionContext::create();
-        module_execution_context->realm = realm;
-        vm.push_execution_context(*module_execution_context);
         result = vm.bytecode_interpreter().run(*script_or_module);
-        vm.pop_execution_context();
         };
 
     // Execution
@@ -97,7 +99,8 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
         result = vm.throw_completion<JS::SyntaxError>(move(error_string));
     }
     else {
-        run_script_or_module(script_or_error.value());
+        auto script = script_or_error.value();
+        run_script_or_module(script);
     }
 
 
@@ -105,8 +108,8 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
     auto handle_exception = [&](JS::Value thrown_value) -> ErrorOr<void> {
         warnln("Uncaught exception:");
         // TODO: Fix This
-        // auto strval = MUST(thrown_value.to_string(vm));
-        // warnln("{}", strval);
+        auto strval = MUST(thrown_value.to_string(vm));
+        warnln("{}", strval);
         warnln();
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
@@ -117,20 +120,21 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
         };
 
 
-    if (!result.is_error())
-        return result.value();
+    if (result.is_error()) {
+        VERIFY(result.throw_completion().value().has_value());
+        TRY(handle_exception(*result.release_error().value()));
+        return Error::from_string_literal("Uncaught exception");
+    }
 
-    VERIFY(result.throw_completion().value().has_value());
-    TRY(handle_exception(*result.release_error().value()));
-    return Error::from_string_literal("Uncaught exception");
+    return result.value();
 }
 
 extern "C" {
-    Environment* e_environment_create() {
+    Environment* environment_create() {
         return Environment::create_and_initialize().ptr();
     }
 
-    JS::Value* e_environment_evaluate(Environment* enviornment, const char* source, const char* source_name) {
+    JS::Value* environmnet_evaluate(Environment* enviornment, const char* source, const char* source_name) {
         auto run_or_errored = enviornment->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
@@ -140,7 +144,30 @@ extern "C" {
         return new JS::Value(run_or_errored.value());
     }
 
-    void e_environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
+    void environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
         environment->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
+    }
+
+    void environment_define_function(Environment* environment, const char* name, void (*function)(JS::Array&)) {
+        auto window = environment->window();
+        auto& realm = window->realm();
+
+        DeprecatedFlyString keyName(name);
+        JS::PropertyKey key(keyName);
+
+        auto function_object = AK::Function<JS::ThrowCompletionOr<JS::Value>(JS::VM&)>([function](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            auto count = vm.argument_count();
+            auto& realm = *vm.current_realm();
+            auto arguments = TRY(JS::Array::create(realm, 0));
+            for (size_t i = 0; i < count; i++) {
+                arguments->indexed_properties().append(vm.argument(i));
+            }
+
+            function(*arguments);
+            return JS::js_undefined();
+            });
+
+        window->define_native_function(realm, key, move(function_object), 0, JS::Attribute::Writable | JS::Attribute::Configurable);
+        dbgln("-- Defined function '{}'", name);
     }
 }
