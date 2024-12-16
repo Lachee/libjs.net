@@ -32,7 +32,7 @@ void Document::initialize(JS::Realm& realm)
 
 GC::Ref<Document> Document::create_and_initialize()
 {
-    dbgln("-- Creating and initializing environment");
+    dbgln("-- Creating and initializing document");
 
     GC::Ptr<GameWindow> window;
 
@@ -47,15 +47,15 @@ GC::Ref<Document> Document::create_and_initialize()
     // Im sure this is here for a reason. Ladybird does it so I will too - Lake.
     window = verify_cast<GameWindow>(realm_execution_context->realm->global_object());
 
-    auto environment = Document::create(window->realm());
-    environment->m_execution_context = move(realm_execution_context);
-    environment->m_window = window;
+    auto document = Document::create(window->realm());
+    document->m_execution_context = move(realm_execution_context);
+    document->m_window = window;
 
-    window->set_associated_environment(environment);
+    window->set_associated_document(document);
 
     // Root level execution context
-    main_thread_vm().push_execution_context(*environment->execution_context());
-    return environment;
+    main_thread_vm().push_execution_context(*document->execution_context());
+    return document;
 }
 
 bool Document::log(JS::Console::LogLevel log_level, StringView content)
@@ -129,12 +129,12 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
 }
 
 extern "C" {
-    Document* environment_create() {
+    Document* document_create() {
         return Document::create_and_initialize().ptr();
     }
 
-    JS::Value* environmnet_evaluate(Document* enviornment, const char* source, const char* source_name) {
-        auto run_or_errored = enviornment->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
+    JS::Value* document_evaluate(Document* document, const char* source, const char* source_name) {
+        auto run_or_errored = document->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
             return nullptr;
@@ -143,12 +143,12 @@ extern "C" {
         return new JS::Value(run_or_errored.value());
     }
 
-    void environment_set_on_console_log(Document* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
-        environment->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
+    void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
+        document->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
     }
 
-    void environment_define_function(Document* environment, const char* name, void (*function)(JS::Array&)) {
-        auto window = environment->window();
+    void document_define_function(Document* document, const char* name, void (*function)(JS::Array&)) {
+        auto window = document->window();
         auto& realm = window->realm();
 
         DeprecatedFlyString keyName(name);

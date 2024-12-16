@@ -10,8 +10,8 @@ void GameWindow::initialize(JS::Realm& realm) {
     Base::initialize(realm);
 }
 
-void GameWindow::set_associated_environment(Document& environment) {
-    m_associated_environment = environment;
+void GameWindow::set_associated_document(Document& environment) {
+    m_associated_document = environment;
 }
 
 JS::Realm& GameWindow::realm() const {

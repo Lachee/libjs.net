@@ -38,8 +38,8 @@ public:
 
 
 extern "C" {
-    Document* environment_create();
-    JS::Value* environmnet_evaluate(Document* enviornment, const char* source, const char* source_name);
-    void environment_set_on_console_log(Document* environment, void (*on_console_log)(JS::Console::LogLevel, const char*));
-    void environment_define_function(Document* environment, const char* name, void (*function)(JS::Array&));
+    Document* document_create();
+    JS::Value* document_evaluate(Document* document, const char* source, const char* source_name);
+    void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*));
+    void document_define_function(Document* document, const char* name, void (*function)(JS::Array&));
 }

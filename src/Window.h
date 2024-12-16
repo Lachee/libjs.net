@@ -9,7 +9,7 @@ class GameWindow final : public JS::GlobalObject {
     // GC_DECLARE_ALLOCATOR(Window);
 
 private:
-    GC::Ptr<Document> m_associated_environment;
+    GC::Ptr<Document> m_associated_document;
 
 
 public:
@@ -18,7 +18,8 @@ public:
     GameWindow(JS::Realm& realm) : JS::GlobalObject(realm) {}
     ~GameWindow() {}
 
-    void set_associated_environment(Document&);
+    Document& associated_document() { return *m_associated_document; }
+    void set_associated_document(Document&);
     JS::Realm& realm() const;
 
 private:
