@@ -15,8 +15,8 @@ foreach (string dependent in Directory.GetFiles("../Build/release"))
 ThreadPool.SetMaxThreads(1, 1);
 List<Task> pendingTasks = new List<Task>();
 
-var environment = new LibJS.Environment();
-environment.OnLog += (level, message) =>
+var document = new LibJS.Document();
+document.OnLog += (level, message) =>
 {
     if (level == LibJS.LogLevel.Error)
     {
@@ -41,13 +41,13 @@ environment.OnLog += (level, message) =>
     Console.ResetColor();
 };
 
-environment.DefineFunction("print", (env, args) =>
+document.DefineFunction("print", (env, args) =>
 {
     Console.WriteLine("print:\t" + string.Join(" ", args.Select(a => a.ToString())));
 });
 
 Value setTimeoutCallback = null;
-environment.DefineFunction("setTimeout", (env, args) =>
+document.DefineFunction("setTimeout", (env, args) =>
 {
     if (args.Count != 2)
         throw new ArgumentException("setTimeout requires 2 arguments");
@@ -60,18 +60,19 @@ environment.DefineFunction("setTimeout", (env, args) =>
     var milliseconds = args[1].AsDouble();
     Console.WriteLine($"setTimeout: CB: ${callback}, MS: ${milliseconds}");
 
-    callback.Invoke(); //   <- This works fine.
+    document.Call(callback);
+    // callback.Invoke(); //   <- This works fine.
     setTimeoutCallback = callback; // <- Invoking this later throws a AccessViolationException.
     // pendingTasks.Add(Task.Delay(TimeSpan.FromMilliseconds(milliseconds)).ContinueWith(_ => callback.Invoke())); <- This throws AccessViolationException
 });
 
-var result = environment.Evaluate(@"
+var result = document.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
     const c = a + b;
 
     setTimeout(() => {
-        console.log('setTimeout executed');
+        console.log('setTimeout executed', c);
     }, 2000);
 
     // const promise = new Promise((resolve, reject) => {
@@ -79,13 +80,14 @@ var result = environment.Evaluate(@"
     // });
 
     console.log('Result:', c);
-    c;
 ");
-Console.WriteLine($"Result as string:\t{result}");
-Console.WriteLine($"Result as double:\t{result.AsDouble() * 2}");
+
+Console.WriteLine("Result: {0}", result);
 
 // This still throws the same issue.
-setTimeoutCallback.Invoke();
+Console.WriteLine("==========");
+if (setTimeoutCallback != null)
+    document.Call(setTimeoutCallback);
 
 Console.WriteLine("Waiting for tasks to finish...");
 await Task.WhenAll(pendingTasks);

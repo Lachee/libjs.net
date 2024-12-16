@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
 
-class Environment;
+class Document;
 class GameWindow;
 class LogClient;
 class InteropValue;

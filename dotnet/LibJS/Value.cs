@@ -5,22 +5,22 @@ using System.Text;
 
 namespace LibJS
 {
-    public sealed class Value : IDisposable
+    public sealed class Value : IUnmanagedObject
     {
         const int STRING_MAX_LENGTH = 2048;
 
-        [DllImport(Environment.LibraryName)] static extern void js_value_free(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern ushort js_value_tag(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern ushort js_value_encoded(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern int js_value_to_string(IntPtr value, byte[] strBuff, int strBuffSize);
-        [DllImport(Environment.LibraryName)] static extern double js_value_as_double(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern bool js_value_is_function(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern bool js_value_is_constructor(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern bool js_value_is_error(IntPtr value);
-        [DllImport(Environment.LibraryName)] static extern IntPtr js_value_call(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern void js_value_free(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern ushort js_value_tag(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern ushort js_value_encoded(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern int js_value_to_string(IntPtr value, byte[] strBuff, int strBuffSize);
+        [DllImport(Document.LibraryName)] static extern double js_value_as_double(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern bool js_value_is_function(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern bool js_value_is_constructor(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern bool js_value_is_error(IntPtr value);
 
 
         private IntPtr m_ptr;
+        public IntPtr Ptr => m_ptr;
 
         private ushort? m_tag;
         private ushort Tag => m_tag ??= js_value_tag(m_ptr);
@@ -85,26 +85,26 @@ namespace LibJS
             return Encoding.UTF8.GetString(buffer, 0, size);
         }
 
-        /// <summary>
-        /// Invokes the value as a function
-        /// </summary>
-        /// <returns>Result of the function call.</returns>
-        /// <exception cref="InvalidOperationException">If the value is not a function</exception>
-        public Value? Invoke() {
-            if (!IsFunction)
-                throw new InvalidOperationException("Value is not a function");
+        // /// <summary>
+        // /// Invokes the value as a function
+        // /// </summary>
+        // /// <returns>Result of the function call.</returns>
+        // /// <exception cref="InvalidOperationException">If the value is not a function</exception>
+        // public Value? Invoke() {
+        //     if (!IsFunction)
+        //         throw new InvalidOperationException("Value is not a function");
 
-            IntPtr result_ptr = js_value_call(m_ptr);
-            if (result_ptr == IntPtr.Zero)
-                throw new InvalidOperationException("Failed to invoke the function");
+        //     IntPtr result_ptr = js_value_call(m_ptr);
+        //     if (result_ptr == IntPtr.Zero)
+        //         throw new InvalidOperationException("Failed to invoke the function");
 
-            Value value = new Value(result_ptr);
-            if (value.IsUndefined || value.IsNull)  {
-                value.Dispose();
-                return null;
-            }
-            return value;
-        }
+        //     Value value = new Value(result_ptr);
+        //     if (value.IsUndefined || value.IsNull)  {
+        //         value.Dispose();
+        //         return null;
+        //     }
+        //     return value;
+        // }
 
         public override string ToString()
         {
@@ -113,6 +113,8 @@ namespace LibJS
 
         public void Dispose()
         {
+            return;
+
             if (m_ptr != IntPtr.Zero)
             {
                 js_value_free(m_ptr);

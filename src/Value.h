@@ -23,7 +23,8 @@ extern "C" {
     bool js_value_is_function(JS::Value* value);
     bool js_value_is_constructor(JS::Value* value);
     bool js_value_is_error(JS::Value* value);
-    JS::Value* js_value_call(JS::Value* value); // FIXME: Pass arguments to call
+    JS::Value* js_value_call(Document* environment, JS::Value* value);
+    // JS::Value* js_value_call(JS::Value* value); // FIXME: Pass arguments to call
 
     JS::Value* js_object_get_property_value_at_index(JS::Object* object, int index);
     JS::Value* js_object_get_property_value(JS::Object* object, const char* name);

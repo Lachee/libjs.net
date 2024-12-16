@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Forward.h"
-#include "Environment.h"
+#include "Document.h"
 
 
 class GameWindow final : public JS::GlobalObject {
@@ -9,7 +9,7 @@ class GameWindow final : public JS::GlobalObject {
     // GC_DECLARE_ALLOCATOR(Window);
 
 private:
-    GC::Ptr<Environment> m_associated_environment;
+    GC::Ptr<Document> m_associated_environment;
 
 
 public:
@@ -18,7 +18,7 @@ public:
     GameWindow(JS::Realm& realm) : JS::GlobalObject(realm) {}
     ~GameWindow() {}
 
-    void set_associated_environment(Environment&);
+    void set_associated_environment(Document&);
     JS::Realm& realm() const;
 
 private:

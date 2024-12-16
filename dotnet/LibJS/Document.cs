@@ -3,27 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace LibJS
 {
-    public enum LogLevel {
-        Assert = 0,
-        Count,
-        CountReset,
-        Debug,
-        Dir,
-        DirXML,
-        Error,
-        Group,
-        GroupCollapsed,
-        Info,
-        Log,
-        TimeEnd,
-        TimeLog,
-        Table,
-        Trace,
-        Warn,
-    };
-
-    public delegate void NativeFunction(Environment environment, Array args);
-    public class Environment
+    public delegate void NativeFunction(Document environment, Array args);
+    public class Document : IUnmanagedObject
     {
         internal const string LibraryName = "LibJSNet";
         // [DllImport(LIB)] static extern IntPtr create_environment();
@@ -37,12 +18,14 @@ namespace LibJS
         [DllImport(LibraryName)] static extern void environment_set_on_console_log(IntPtr enviornment, IntPtr callback);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void FunctionCallback(IntPtr args_ptr);
         [DllImport(LibraryName)] static extern void environment_define_function(IntPtr enviornment, string name, IntPtr callback);
+        [DllImport(LibraryName)] static extern IntPtr js_value_call(IntPtr environment, IntPtr value);
 
         private IntPtr m_ptr;
+        public IntPtr Ptr => m_ptr;
 
         public event Action<LogLevel, string>? OnLog;
 
-        public Environment()
+        public Document()
         {
             m_ptr = environment_create();
 
@@ -68,6 +51,32 @@ namespace LibJS
                 return null;
 
             return new Value(ptr);
+        }
+
+         /// <summary>
+        /// Invokes the value as a function
+        /// </summary>
+        /// <returns>Result of the function call.</returns>
+        /// <exception cref="InvalidOperationException">If the value is not a function</exception>
+        public Value? Call(Value function) {
+            if (!function.IsFunction)
+                throw new InvalidOperationException("Value is not a function");
+
+            IntPtr result_ptr = js_value_call(m_ptr, function.Ptr);
+            if (result_ptr == IntPtr.Zero)
+                throw new InvalidOperationException("Failed to invoke the function");
+
+            Value value = new Value(result_ptr);
+            if (value.IsUndefined || value.IsNull)  {
+                value.Dispose();
+                return null;
+            }
+            return value;
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

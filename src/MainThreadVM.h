@@ -9,5 +9,5 @@ ErrorOr<void> initialize_main_thread_vm();
 JS::VM& main_thread_vm();
 
 /** Creates a new realm */
-NonnullOwnPtr<JS::ExecutionContext> create_execution_context(Function<JS::Object* (JS::Realm&)> create_global_object, Function<JS::Object* (JS::Realm&)> create_global_this_value);
+NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(Function<JS::Object* (JS::Realm&)> create_global_object, Function<JS::Object* (JS::Realm&)> create_global_this_value);
 

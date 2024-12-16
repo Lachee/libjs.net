@@ -4,13 +4,14 @@ using System.Runtime.InteropServices;
 namespace LibJS
 {
 
-    public class Object : IDisposable
+    public class Object : IUnmanagedObject
     {
 
-        [DllImport(Environment.LibraryName)] protected static extern IntPtr js_object_get_property_value_at_index(IntPtr obj, int index);
-        [DllImport(Environment.LibraryName)] protected static extern IntPtr js_object_get_property_value(IntPtr obj, string name);
+        [DllImport(Document.LibraryName)] protected static extern IntPtr js_object_get_property_value_at_index(IntPtr obj, int index);
+        [DllImport(Document.LibraryName)] protected static extern IntPtr js_object_get_property_value(IntPtr obj, string name);
 
-        protected IntPtr m_ptr;
+        private IntPtr m_ptr;
+        public IntPtr Ptr => m_ptr;
 
         internal Object(IntPtr ptr)
         {

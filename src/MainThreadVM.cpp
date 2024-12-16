@@ -35,7 +35,7 @@ JS::VM& main_thread_vm() {
     return *s_main_thread_vm;
 }
 
-NonnullOwnPtr<JS::ExecutionContext> create_execution_context(Function<JS::Object* (JS::Realm&)> create_global_object, Function<JS::Object* (JS::Realm&)> create_global_this_value) {
+NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(Function<JS::Object* (JS::Realm&)> create_global_object, Function<JS::Object* (JS::Realm&)> create_global_this_value) {
     auto& vm = main_thread_vm();
 
     // 1. Perform InitializeHostDefinedRealm() with the provided customizations for creating the global object and the global this binding.

@@ -1,11 +1,31 @@
+#include "Forward.h"
 #include "Value.h"
 #include "MainThreadVM.h"
+#include "Document.h"
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ExecutionContext.h>
+
+#if 0
+JS::ExecutionContext const& execution_context_of_realm(JS::Realm const& realm) {
+    VERIFY(realm.host_defined());
+
+    // 1. If realm is a principal realm, then return the realm execution context of the environment settings object of realm.
+    if (is<Bindings::PrincipalHostDefined>(*realm.host_defined()))
+        return static_cast<Bindings::PrincipalHostDefined const&>(*realm.host_defined()).environment_settings_object->realm_execution_context();
+
+    // 2. Assert: realm is a synthetic realm.
+    // 3. Return the execution context of the synthetic realm settings object of realm.
+    return *verify_cast<Bindings::SyntheticHostDefined>(*realm.host_defined()).synthetic_realm_settings.execution_context;
+}
+
+inline JS::ExecutionContext& execution_context_of_realm(JS::Realm& realm) {
+    return const_cast<JS::ExecutionContext&>(execution_context_of_realm(const_cast<JS::Realm const&>(realm)));
+}
+#endif
 
 extern "C" {
     void js_value_free(JS::Value* value)
@@ -55,7 +75,7 @@ extern "C" {
         return value->is_error();
     }
 
-    JS::Value* js_value_call(JS::Value* value)
+    JS::Value* js_value_call(Document* environment, JS::Value* value)
     {
         // FIXME: Pass arguments to call
         if (!value) {
@@ -68,22 +88,31 @@ extern "C" {
             return nullptr;
         }
 
-        dbgln("-- Calling Function");
-        JS::VM& vm = main_thread_vm();
-        // Adding a new context doesnt fix this suee
-        //  OwnPtr<JS::ExecutionContext> execution_context = JS::ExecutionContext::create();
-        //  vm.push_execution_context(*execution_context);
-        vm.dump_backtrace();
+        dbgln("-> Calling Function");
+        dbgln("-> Function Name: {}", value->to_string_without_side_effects());
+        auto& function_object = value->as_function();
+        auto& relevant_realm = function_object.shape().realm();
 
-        dbgln("--- B: {}", value->to_string_without_side_effects());
-        auto result = JS::call(vm, *value, JS::js_undefined(), vm.running_execution_context().arguments.span());
+        auto& vm = function_object.vm();
+        auto& execution_context = environment->execution_context();
+        vm.push_execution_context(*execution_context);
 
-        dbgln("--- C");
+        auto script_or_module = vm.get_active_script_or_module();
+        if (script_or_module.has<Empty>()) {
+            warnln("Error calling function: No active script or module");
+            return nullptr;
+        }
+
+        dbgln("-> Calling");
+        auto this_value = JS::js_undefined();
+        auto result = JS::call(vm, function_object, this_value);
+
         // vm.pop_execution_context();
         if (result.is_error()) {
             warnln("Error calling function");
-            return nullptr;
+            return new JS::Value(JS::js_undefined());
         }
+
         return new JS::Value(result.release_value());
     }
 

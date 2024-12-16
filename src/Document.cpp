@@ -1,5 +1,5 @@
 #include "Forward.h"
-#include "Environment.h"
+#include "Document.h"
 #include "Window.h"
 #include "MainThreadVM.h"
 #include "LogClient.h"
@@ -12,31 +12,31 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/PropertyKey.h>
 
-Environment::Environment(JS::Realm& realm)
+Document::Document(JS::Realm& realm)
     : JS::GlobalObject(realm),
     m_realm(realm)
 {
 }
 
-Environment::~Environment() = default;
+Document::~Document() = default;
 
-GC::Ref<Environment> Environment::create(JS::Realm& realm)
+GC::Ref<Document> Document::create(JS::Realm& realm)
 {
-    return realm.create<Environment>(realm);
+    return realm.create<Document>(realm);
 }
 
-void Environment::initialize(JS::Realm& realm)
+void Document::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
 }
 
-GC::Ref<Environment> Environment::create_and_initialize()
+GC::Ref<Document> Document::create_and_initialize()
 {
     dbgln("-- Creating and initializing environment");
 
     GC::Ptr<GameWindow> window;
 
-    auto execution_context = create_execution_context(
+    auto realm_execution_context = create_a_new_javascript_realm(
         [&](JS::Realm& realm) -> JS::Object* {
             window = GameWindow::create(realm);
             return window;
@@ -45,20 +45,20 @@ GC::Ref<Environment> Environment::create_and_initialize()
 
     // 6. Set window to the global object of realmExecutionContext's Realm component.
     // Im sure this is here for a reason. Ladybird does it so I will too - Lake.
-    window = verify_cast<GameWindow>(execution_context->realm->global_object());
+    window = verify_cast<GameWindow>(realm_execution_context->realm->global_object());
 
-    auto environment = Environment::create(window->realm());
+    auto environment = Document::create(window->realm());
+    environment->m_execution_context = move(realm_execution_context);
     environment->m_window = window;
+
     window->set_associated_environment(environment);
 
     // Root level execution context
-    auto module_execution_context = JS::ExecutionContext::create();
-    module_execution_context->realm = window->realm();
-    main_thread_vm().push_execution_context(*module_execution_context);
+    main_thread_vm().push_execution_context(*environment->execution_context());
     return environment;
 }
 
-bool Environment::log(JS::Console::LogLevel log_level, StringView content)
+bool Document::log(JS::Console::LogLevel log_level, StringView content)
 {
     if (m_on_console_log_ptr) {
         m_on_console_log_ptr(log_level, content.characters_without_null_termination());
@@ -67,7 +67,7 @@ bool Environment::log(JS::Console::LogLevel log_level, StringView content)
     return false;
 }
 
-ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_name)
+ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
 {
     dbgln("-- Parsing and running '{}'", source_name);
 
@@ -78,7 +78,6 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
     auto& console_object = *realm.intrinsics().console_object();
     LogClient console_client(console_object.console(), *this);
     console_object.console().set_client(console_client);
-
 
     JS::ThrowCompletionOr<JS::Value> result{ JS::js_undefined() };
 
@@ -130,11 +129,11 @@ ErrorOr<JS::Value> Environment::evaluate(StringView source, StringView source_na
 }
 
 extern "C" {
-    Environment* environment_create() {
-        return Environment::create_and_initialize().ptr();
+    Document* environment_create() {
+        return Document::create_and_initialize().ptr();
     }
 
-    JS::Value* environmnet_evaluate(Environment* enviornment, const char* source, const char* source_name) {
+    JS::Value* environmnet_evaluate(Document* enviornment, const char* source, const char* source_name) {
         auto run_or_errored = enviornment->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
@@ -144,11 +143,11 @@ extern "C" {
         return new JS::Value(run_or_errored.value());
     }
 
-    void environment_set_on_console_log(Environment* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
+    void environment_set_on_console_log(Document* environment, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
         environment->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
     }
 
-    void environment_define_function(Environment* environment, const char* name, void (*function)(JS::Array&)) {
+    void environment_define_function(Document* environment, const char* name, void (*function)(JS::Array&)) {
         auto window = environment->window();
         auto& realm = window->realm();
 
@@ -156,15 +155,19 @@ extern "C" {
         JS::PropertyKey key(keyName);
 
         auto function_object = AK::Function<JS::ThrowCompletionOr<JS::Value>(JS::VM&)>([function](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
-            dbgln("-- Running function");
             auto count = vm.argument_count();
             auto& realm = *vm.current_realm();
             auto arguments = TRY(JS::Array::create(realm, 0));
             for (size_t i = 0; i < count; i++) {
                 auto argument = vm.argument(i);
-                auto val = JS::Value(argument);
-                dbgln("---- Argument {}: {}", i, val.to_string_without_side_effects());
-                arguments->indexed_properties().append(val);
+                if (argument.is_object()) {
+                    JS::Object& object = argument.as_object();
+                    auto jsval = JS::Value(&object);
+                    arguments->indexed_properties().append(jsval);
+                }
+                else {
+                    arguments->indexed_properties().append(argument);
+                }
             }
 
             function(*arguments);
@@ -172,6 +175,5 @@ extern "C" {
             });
 
         window->define_native_function(realm, key, move(function_object), 0, JS::Attribute::Writable | JS::Attribute::Configurable);
-        dbgln("-- Defined function '{}'", name);
     }
 }
