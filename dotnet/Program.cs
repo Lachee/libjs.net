@@ -61,7 +61,6 @@ document.DefineFunction("setTimeout", (env, args) =>
     Console.WriteLine($"setTimeout: CB: ${callback}, MS: ${milliseconds}");
 
     document.Call(callback);
-    // callback.Invoke(); //   <- This works fine.
     setTimeoutCallback = callback; // <- Invoking this later throws a AccessViolationException.
     // pendingTasks.Add(Task.Delay(TimeSpan.FromMilliseconds(milliseconds)).ContinueWith(_ => callback.Invoke())); <- This throws AccessViolationException
 });
@@ -70,16 +69,8 @@ var result = document.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
     const c = a + b;
-
-    setTimeout(() => {
-        console.log('setTimeout executed', c);
-    }, 2000);
-
-    // const promise = new Promise((resolve, reject) => {
-        // console.log('Promise Executions');
-    // });
-
-    console.log('Result:', c);
+    setTimeout(() => console.log('timeout called'), 1000);
+    () => console.log('apple');
 ");
 
 Console.WriteLine("Result: {0}", result);
@@ -88,6 +79,11 @@ Console.WriteLine("Result: {0}", result);
 Console.WriteLine("==========");
 if (setTimeoutCallback != null)
     document.Call(setTimeoutCallback);
+
+document.Evaluate(@"
+    console.log('Hello World!', a, b, c);
+    apple();
+");
 
 Console.WriteLine("Waiting for tasks to finish...");
 await Task.WhenAll(pendingTasks);

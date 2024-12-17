@@ -16,3 +16,5 @@ class Document;
 class GameWindow;
 class LogClient;
 class InteropValue;
+class EnvironmentSettingsObject;
+struct PrincipalHostDefined;

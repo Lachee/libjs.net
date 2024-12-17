@@ -1,6 +1,7 @@
 #include "Forward.h"
 #include "Value.h"
 #include "MainThreadVM.h"
+#include "EnvironmentSettingsObject.h"
 #include "Document.h"
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/Object.h>
@@ -88,24 +89,17 @@ extern "C" {
             return nullptr;
         }
 
-        dbgln("-> Calling Function");
-        dbgln("-> Function Name: {}", value->to_string_without_side_effects());
         auto& function_object = value->as_function();
         auto& relevant_realm = function_object.shape().realm();
 
-        auto& vm = function_object.vm();
-        auto& execution_context = environment->execution_context();
-        vm.push_execution_context(*execution_context);
-
-        auto script_or_module = vm.get_active_script_or_module();
-        if (script_or_module.has<Empty>()) {
-            warnln("Error calling function: No active script or module");
-            return nullptr;
-        }
+        prepare_to_run_script(relevant_realm);
 
         dbgln("-> Calling");
         auto this_value = JS::js_undefined();
+        auto& vm = function_object.vm();
         auto result = JS::call(vm, function_object, this_value);
+
+        clean_up_after_running_script(relevant_realm);
 
         // vm.pop_execution_context();
         if (result.is_error()) {

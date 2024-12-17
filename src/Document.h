@@ -11,7 +11,6 @@ class Document final : public JS::GlobalObject {
 private:
     GC::Ptr<GameWindow> m_window;
     GC::Ptr<JS::Realm> m_realm;
-    AK::OwnPtr<JS::ExecutionContext> m_execution_context;
     Function<void(JS::Console::LogLevel, const char*)> m_on_console_log_ptr{ nullptr };
 
 private:
@@ -26,7 +25,6 @@ public:
 
     GC::Ptr<GameWindow> window() { return m_window; }
     GC::Ptr<JS::Realm> realm() { return m_realm; }
-    AK::OwnPtr<JS::ExecutionContext>& execution_context() { return m_execution_context; }
 
     bool log(JS::Console::LogLevel, StringView content);
     void set_on_console_log(Function<void(JS::Console::LogLevel, const char*)> on_console_log) {

@@ -2,6 +2,7 @@
 #include "Document.h"
 #include "Window.h"
 #include "MainThreadVM.h"
+#include "EnvironmentSettingsObject.h"
 #include "LogClient.h"
 
 #include <AK/Format.h>
@@ -47,14 +48,17 @@ GC::Ref<Document> Document::create_and_initialize()
     // Im sure this is here for a reason. Ladybird does it so I will too - Lake.
     window = verify_cast<GameWindow>(realm_execution_context->realm->global_object());
 
+    EnvironmentSettingsObject::setup(
+        move(realm_execution_context)
+    );
+
     auto document = Document::create(window->realm());
-    document->m_execution_context = move(realm_execution_context);
     document->m_window = window;
 
     window->set_associated_document(document);
 
     // Root level execution context
-    main_thread_vm().push_execution_context(*document->execution_context());
+    // main_thread_vm().push_execution_context(*document->execution_context());
     return document;
 }
 
@@ -98,8 +102,10 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
         result = vm.throw_completion<JS::SyntaxError>(move(error_string));
     }
     else {
+        prepare_to_run_script(realm);
         auto script = script_or_error.value();
         run_script_or_module(script);
+        clean_up_after_running_script(realm);
     }
 
 
@@ -160,14 +166,7 @@ extern "C" {
             auto arguments = TRY(JS::Array::create(realm, 0));
             for (size_t i = 0; i < count; i++) {
                 auto argument = vm.argument(i);
-                if (argument.is_object()) {
-                    JS::Object& object = argument.as_object();
-                    auto jsval = JS::Value(&object);
-                    arguments->indexed_properties().append(jsval);
-                }
-                else {
-                    arguments->indexed_properties().append(argument);
-                }
+                arguments->indexed_properties().append(argument);
             }
 
             function(*arguments);
