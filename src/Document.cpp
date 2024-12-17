@@ -60,7 +60,8 @@ GC::Ref<Document> Document::create_and_initialize()
         move(realm_execution_context)
     );
 
-    auto document = Document::create(window->realm());
+    // auto document = Document::create(window->realm());
+    auto document = main_thread_vm().heap().allocate<Document>(window->realm());
     document->m_window = window;
 
     window->set_associated_document(document);

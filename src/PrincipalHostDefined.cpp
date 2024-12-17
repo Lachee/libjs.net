@@ -1,4 +1,6 @@
 #include "PrincipalHostDefined.h"
+#include "Forward.h"
+#include "EnvironmentSettingsObject.h"
 
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Realm.h>
