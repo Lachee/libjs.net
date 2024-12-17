@@ -7,11 +7,20 @@
 
 #include <AK/Format.h>
 #include <AK/Try.h>
+#include <LibGC/Cell.h>
+#include <LibGC/Root.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/AbstractOperations.h>
+
+// DEBUBG: Just testing static root document
+static GC::Root<Document> s_document;
+
+GC_DEFINE_ALLOCATOR(Document);
 
 Document::Document(JS::Realm& realm)
     : JS::GlobalObject(realm),
@@ -34,7 +43,6 @@ void Document::initialize(JS::Realm& realm)
 GC::Ref<Document> Document::create_and_initialize()
 {
     dbgln("-- Creating and initializing document");
-
     GC::Ptr<GameWindow> window;
 
     auto realm_execution_context = create_a_new_javascript_realm(
@@ -62,6 +70,13 @@ GC::Ref<Document> Document::create_and_initialize()
     return document;
 }
 
+void Document::visit_edges(GC::Cell::Visitor& visitor) {
+    Base::visit_edges(visitor);
+    visitor.visit(m_window);
+    visitor.visit(m_realm);
+    visitor.visit(m_last_value);
+}
+
 bool Document::log(JS::Console::LogLevel log_level, StringView content)
 {
     if (m_on_console_log_ptr) {
@@ -77,7 +92,6 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
 
     auto& realm = window()->realm();
     auto& vm = realm.vm();
-
 
     auto& console_object = *realm.intrinsics().console_object();
     LogClient console_client(console_object.console(), *this);
@@ -136,17 +150,19 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
 
 extern "C" {
     Document* document_create() {
-        return Document::create_and_initialize().ptr();
+        auto document = Document::create_and_initialize();
+        s_document = GC::make_root(document);
+        return document.ptr();
     }
 
-    JS::Value* document_evaluate(Document* document, const char* source, const char* source_name) {
+    void document_evaluate(Document* document, const char* source, const char* source_name) {
         auto run_or_errored = document->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
-            return nullptr;
+            return;
         }
 
-        return new JS::Value(run_or_errored.value());
+        document->m_last_value = run_or_errored.value();
     }
 
     void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
@@ -174,5 +190,35 @@ extern "C" {
             });
 
         window->define_native_function(realm, key, move(function_object), 0, JS::Attribute::Writable | JS::Attribute::Configurable);
+    }
+
+    void document_call_last_value(Document* document)
+    {
+        auto value = s_document->m_last_value;
+
+        if (!value.is_function()) {
+            warnln("Error: value is not a function");
+            return;
+        }
+
+        auto& function_object = value.as_function();
+        auto& relevant_realm = function_object.shape().realm();
+
+        prepare_to_run_script(relevant_realm);
+
+        dbgln("-> Calling");
+        auto this_value = document->window();
+        auto& vm = function_object.vm();
+        auto result = JS::call(vm, function_object, this_value);
+
+        clean_up_after_running_script(relevant_realm);
+
+        // vm.pop_execution_context();
+        if (result.is_error()) {
+            warnln("Error calling function");
+            return;
+        }
+
+        dbgln("-> Call result: {}", result.value().to_string_without_side_effects());
     }
 }

@@ -3,19 +3,23 @@
 #include "Forward.h"
 #include "Window.h"
 #include <AK/Function.h>
+#include <LibGC/Cell.h>
+#include <LibGC/Root.h>
 #include <LibJS/Console.h>
 
 class Document final : public JS::GlobalObject {
     JS_OBJECT(Document, JS::GlobalObject);
+    GC_DECLARE_ALLOCATOR(Document);
 
 private:
     GC::Ptr<GameWindow> m_window;
     GC::Ptr<JS::Realm> m_realm;
     Function<void(JS::Console::LogLevel, const char*)> m_on_console_log_ptr{ nullptr };
 
-private:
+protected:
     Document(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(GC::Cell::Visitor&) override;
 
 public:
     virtual ~Document() override;
@@ -32,12 +36,16 @@ public:
     }
 
     ErrorOr<JS::Value> evaluate(StringView source, StringView source_name);
+
+    JS::Value m_last_value;
 };
 
 
 extern "C" {
     Document* document_create();
-    JS::Value* document_evaluate(Document* document, const char* source, const char* source_name);
+    void document_evaluate(Document* document, const char* source, const char* source_name);
     void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*));
     void document_define_function(Document* document, const char* name, void (*function)(JS::Array&));
+
+    void document_call_last_value(Document* document);
 }

@@ -17,7 +17,13 @@ namespace LibJS
         [DllImport(Document.LibraryName)] static extern bool js_value_is_function(IntPtr value);
         [DllImport(Document.LibraryName)] static extern bool js_value_is_constructor(IntPtr value);
         [DllImport(Document.LibraryName)] static extern bool js_value_is_error(IntPtr value);
+        [DllImport(Document.LibraryName)] static extern void js_value_invoke(uint value);
+        [DllImport(Document.LibraryName)] static extern IntPtr js_value_call(IntPtr environment, IntPtr value);
 
+        public static void Invoke(uint value) 
+        {
+            js_value_invoke(value);
+        }
 
         private IntPtr m_ptr;
         public IntPtr Ptr => m_ptr;

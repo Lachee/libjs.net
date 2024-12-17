@@ -10,29 +10,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 
-#if 0
-JS::ExecutionContext const& execution_context_of_realm(JS::Realm const& realm) {
-    VERIFY(realm.host_defined());
-
-    // 1. If realm is a principal realm, then return the realm execution context of the environment settings object of realm.
-    if (is<Bindings::PrincipalHostDefined>(*realm.host_defined()))
-        return static_cast<Bindings::PrincipalHostDefined const&>(*realm.host_defined()).environment_settings_object->realm_execution_context();
-
-    // 2. Assert: realm is a synthetic realm.
-    // 3. Return the execution context of the synthetic realm settings object of realm.
-    return *verify_cast<Bindings::SyntheticHostDefined>(*realm.host_defined()).synthetic_realm_settings.execution_context;
-}
-
-inline JS::ExecutionContext& execution_context_of_realm(JS::Realm& realm) {
-    return const_cast<JS::ExecutionContext&>(execution_context_of_realm(const_cast<JS::Realm const&>(realm)));
-}
-#endif
-
 extern "C" {
-    void js_value_free(JS::Value* value)
-    {
-        delete value;
-    }
 
     u16 js_value_tag(JS::Value* value)
     {
@@ -78,37 +56,10 @@ extern "C" {
 
     JS::Value* js_value_call(Document* environment, JS::Value* value)
     {
-        // FIXME: Pass arguments to call
-        if (!value) {
-            warnln("Error: value is null");
-            return nullptr;
-        }
-
-        if (!value->is_function()) {
-            warnln("Error: value is not a function");
-            return nullptr;
-        }
-
-        auto& function_object = value->as_function();
-        auto& relevant_realm = function_object.shape().realm();
-
-        prepare_to_run_script(relevant_realm);
-
-        dbgln("-> Calling");
-        auto this_value = JS::js_undefined();
-        auto& vm = function_object.vm();
-        auto result = JS::call(vm, function_object, this_value);
-
-        clean_up_after_running_script(relevant_realm);
-
-        // vm.pop_execution_context();
-        if (result.is_error()) {
-            warnln("Error calling function");
-            return new JS::Value(JS::js_undefined());
-        }
-
-        return new JS::Value(result.release_value());
+        warnln("Not Yet Implemented");
+        return nullptr;
     }
+
 
     JS::Value* js_object_get_property_value_at_index(JS::Object* object, int index)
     {

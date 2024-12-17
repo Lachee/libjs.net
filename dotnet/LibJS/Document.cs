@@ -13,12 +13,12 @@ namespace LibJS
         // [DllImport(LIB)] static extern void run(IntPtr environment, string source);
 
         [DllImport(LibraryName)] static extern IntPtr document_create();
-        [DllImport(LibraryName)] static extern IntPtr document_evaluate(IntPtr environment, string source, string source_name);
+        [DllImport(LibraryName)] static extern IntPtr document_evaluate(IntPtr document, string source, string source_name);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, string message);
-        [DllImport(LibraryName)] static extern void document_set_on_console_log(IntPtr enviornment, IntPtr callback);
+        [DllImport(LibraryName)] static extern void document_set_on_console_log(IntPtr document, IntPtr callback);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void FunctionCallback(IntPtr args_ptr);
-        [DllImport(LibraryName)] static extern void document_define_function(IntPtr enviornment, string name, IntPtr callback);
-        [DllImport(LibraryName)] static extern IntPtr js_value_call(IntPtr environment, IntPtr value);
+        [DllImport(LibraryName)] static extern void document_define_function(IntPtr document, string name, IntPtr callback);
+        [DllImport(LibraryName)] static extern void document_call_last_value(IntPtr document);
 
         private IntPtr m_ptr;
         public IntPtr Ptr => m_ptr;
@@ -35,7 +35,8 @@ namespace LibJS
 
         public void DefineFunction(string name, NativeFunction func)
         {
-            var action = new FunctionCallback((argPtr) => {
+            var action = new FunctionCallback((argPtr) =>
+            {
                 func(this, new Array(argPtr));
             });
             document_define_function(m_ptr, name, Marshal.GetFunctionPointerForDelegate(action));
@@ -44,34 +45,18 @@ namespace LibJS
         public Value? Evaluate(string script, string? scriptName = null)
         {
             var ptr = document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
-            if (ptr == IntPtr.Zero)
-                throw new System.Exception("Failed to evaluate the script.");
-
-            if (ptr == IntPtr.Zero)
-                return null;
-
-            return new Value(ptr);
+            return null; // TODO: Implement values again
         }
 
-         /// <summary>
+        /// <summary>
         /// Invokes the value as a function
         /// </summary>
         /// <returns>Result of the function call.</returns>
         /// <exception cref="InvalidOperationException">If the value is not a function</exception>
-        public Value? Call(Value function) {
-            if (!function.IsFunction)
-                throw new InvalidOperationException("Value is not a function");
-
-            IntPtr result_ptr = js_value_call(m_ptr, function.Ptr);
-            if (result_ptr == IntPtr.Zero)
-                throw new InvalidOperationException("Failed to invoke the function");
-
-            Value value = new Value(result_ptr);
-            if (value.IsUndefined || value.IsNull)  {
-                value.Dispose();
-                return null;
-            }
-            return value;
+        public Value? Call(Value function)
+        {
+            document_call_last_value(m_ptr);
+            return null;
         }
 
         public void Dispose()
