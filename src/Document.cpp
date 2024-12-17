@@ -64,8 +64,12 @@ GC::Ref<Document> Document::create_and_initialize()
     // auto document = Document::create(window->realm());
     auto document = main_thread_vm().heap().allocate<Document>(window->realm());
     document->m_window = window;
-
     window->set_associated_document(document);
+
+
+    auto& console_object = *window->realm().intrinsics().console_object();
+    auto console_client = main_thread_vm().heap().allocate<LogClient>(console_object.console(), document);
+    console_object.console().set_client(console_client);;
 
     // Root level execution context
     // main_thread_vm().push_execution_context(*document->execution_context());
@@ -78,6 +82,7 @@ void Document::visit_edges(GC::Cell::Visitor& visitor) {
     visitor.visit(m_realm);
     visitor.visit(m_last_value);
     visitor.visit(m_current_script);
+    // visitor.visit(m_console_object);
 }
 
 bool Document::log(JS::Console::LogLevel log_level, StringView content)
@@ -155,10 +160,6 @@ GC::Ptr<Script> Document::load_script(StringView source, StringView source_name)
 {
     auto& realm = window()->realm();
     auto script = Script::create(source_name.to_byte_string(), source, realm);
-    
-    auto& console_object = *realm.intrinsics().console_object();
-    LogClient console_client(console_object.console(), *this);
-    console_object.console().set_client(console_client);
 
     m_current_script = move(script);
     return script;

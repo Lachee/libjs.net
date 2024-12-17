@@ -50,9 +50,9 @@ var result = document.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
     const c = a + b;
-    print('hello world');
     console.log(a, '+', b, '=', c);
-    () => print('hello'); //console.log('apple');
+    print('hello world');
+    () => console.log('apple');
 ");
 Console.WriteLine("Result: {0}", result);
 
