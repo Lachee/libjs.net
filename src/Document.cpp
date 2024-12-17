@@ -4,6 +4,7 @@
 #include "MainThreadVM.h"
 #include "EnvironmentSettingsObject.h"
 #include "LogClient.h"
+#include "Script.h"
 
 #include <AK/Format.h>
 #include <AK/Try.h>
@@ -23,8 +24,8 @@ static GC::Root<Document> s_document;
 GC_DEFINE_ALLOCATOR(Document);
 
 Document::Document(JS::Realm& realm)
-    : JS::GlobalObject(realm),
-    m_realm(realm)
+    : JS::GlobalObject(realm)
+    , m_realm(realm)
 {
 }
 
@@ -76,6 +77,7 @@ void Document::visit_edges(GC::Cell::Visitor& visitor) {
     visitor.visit(m_window);
     visitor.visit(m_realm);
     visitor.visit(m_last_value);
+    visitor.visit(m_current_script);
 }
 
 bool Document::log(JS::Console::LogLevel log_level, StringView content)
@@ -149,11 +151,41 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
     return result.value();
 }
 
+GC::Ptr<Script> Document::load_script(StringView source, StringView source_name)
+{
+    auto& realm = window()->realm();
+    auto script = Script::create(source_name.to_byte_string(), source, realm);
+    
+    auto& console_object = *realm.intrinsics().console_object();
+    LogClient console_client(console_object.console(), *this);
+    console_object.console().set_client(console_client);
+
+    m_current_script = move(script);
+    return script;
+}
+
 extern "C" {
     Document* document_create() {
         auto document = Document::create_and_initialize();
         s_document = GC::make_root(document);
         return document.ptr();
+    }
+
+    void document_load_script(Document* document, const char* source, const char* source_name)
+    {
+        auto script = document->load_script(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
+        if (!script) {
+            warnln("Failed to load script");
+            return;
+        }
+
+        auto completion = script->run();
+        if (completion.is_error()) {
+            warnln("Failed to run script");
+            return;
+        }
+
+        document->m_last_value = completion.value().value_or(JS::js_undefined());
     }
 
     void document_evaluate(Document* document, const char* source, const char* source_name) {
@@ -207,7 +239,7 @@ extern "C" {
 
         prepare_to_run_script(relevant_realm);
 
-        dbgln("-> Calling");
+        dbgln("-> Calling {}", value.to_string_without_side_effects());
         auto this_value = document->window();
         auto& vm = function_object.vm();
         auto result = JS::call(vm, function_object, this_value);

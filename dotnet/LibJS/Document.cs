@@ -13,6 +13,7 @@ namespace LibJS
         // [DllImport(LIB)] static extern void run(IntPtr environment, string source);
 
         [DllImport(LibraryName)] static extern IntPtr document_create();
+        [DllImport(LibraryName)] static extern void document_load_script(IntPtr document, string source, string source_name);
         [DllImport(LibraryName)] static extern IntPtr document_evaluate(IntPtr document, string source, string source_name);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, string message);
         [DllImport(LibraryName)] static extern void document_set_on_console_log(IntPtr document, IntPtr callback);
@@ -44,7 +45,8 @@ namespace LibJS
 
         public Value? Evaluate(string script, string? scriptName = null)
         {
-            var ptr = document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
+            document_load_script(m_ptr, script, scriptName ?? "Environment.Run");
+            // var ptr = document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
             return null; // TODO: Implement values again
         }
 

@@ -52,7 +52,7 @@ var result = document.Evaluate(@"
     const c = a + b;
     print('hello world');
     console.log(a, '+', b, '=', c);
-    () => console.log('apple');
+    () => print('hello'); //console.log('apple');
 ");
 Console.WriteLine("Result: {0}", result);
 

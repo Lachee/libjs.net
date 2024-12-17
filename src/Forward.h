@@ -13,8 +13,9 @@
 #include <LibJS/Runtime/VM.h>
 
 class Document;
-class GameWindow;
-class LogClient;
-class InteropValue;
 class EnvironmentSettingsObject;
+class GameWindow;
+class InteropValue;
+class LogClient;
+class Script;
 struct PrincipalHostDefined;
