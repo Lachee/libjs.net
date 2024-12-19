@@ -88,7 +88,8 @@ void Document::visit_edges(GC::Cell::Visitor& visitor) {
 
 bool Document::log(JS::Console::LogLevel log_level, StringView content)
 {
-    if (m_on_console_log_ptr) {
+    if (m_on_console_log_ptr)
+    {
         m_on_console_log_ptr(log_level, content.characters_without_null_termination());
         return true;
     }
@@ -221,9 +222,6 @@ extern "C" {
                 arguments->indexed_properties().append(argument);
             }
 
-            dbgln("-> Array length encoded(): {}", arguments->get("length").value().encoded());
-            dbgln("-> Array length is_double: {}", arguments->get("length").value().is_double());
-            dbgln("-> Array length is_int: {}", arguments->get("length").value().is_int32());
             function(*arguments);
             return JS::js_undefined();
             });

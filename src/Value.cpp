@@ -27,7 +27,6 @@ extern "C" {
         auto value = decode_js_value(encoded);
         auto& vm = main_thread_vm();
         auto str = value.to_string_without_side_effects();
-        dbgln("String: {}", str);
         if (str.bytes().size() >= static_cast<size_t>(buffSize)) {
             warnln("-- Result buffer is too small: {} < {}", buffSize, str.bytes().size());
             return 0;
