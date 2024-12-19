@@ -38,7 +38,13 @@ jobs:
           vcpkg_installed
           Build/vcpkg
           Build\caches\vcpkg-binary-cache
-
+      
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: 18
+        directory: ${{ runner.temp }}/llvm
+        env: true
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
