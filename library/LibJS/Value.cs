@@ -14,6 +14,8 @@ namespace LibJS
 		[DllImport(Document.LibraryName)] static extern bool js_value_is_function(ulong value);
 		[DllImport(Document.LibraryName)] static extern bool js_value_is_constructor(ulong value);
 		[DllImport(Document.LibraryName)] static extern bool js_value_is_error(ulong value);
+		[DllImport(Document.LibraryName)] static extern bool js_value_is_array(ulong value);
+		[DllImport(Document.LibraryName)] static extern bool js_value_is_regexp(ulong value);
 		[DllImport(Document.LibraryName)] static extern ulong js_value_invoke(ulong value);
 
 		[FieldOffset(0)]
@@ -59,7 +61,8 @@ namespace LibJS
 		public bool IsFunction => IsObject && js_value_is_function(m_encoded);
 		public bool IsContructor => IsObject && js_value_is_constructor(m_encoded);
 		public bool IsError => IsObject && js_value_is_error(m_encoded);
-
+		public bool IsArray => IsObject && js_value_is_array(m_encoded);
+		public bool IsRegexp => IsObject && js_value_is_regexp(m_encoded);
 
 		internal Value(ulong encoded)
 		{

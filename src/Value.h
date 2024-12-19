@@ -23,6 +23,8 @@ extern "C" {
     bool js_value_is_function(EncodedValue encoded);
     bool js_value_is_constructor(EncodedValue encoded);
     bool js_value_is_error(EncodedValue encoded);
+    bool js_value_is_array(EncodedValue encoded);
+    bool js_value_is_regexp(EncodedValue encoded);
 
     EncodedValue js_object_get_property_value_at_index(JS::Object* object, int index);
     EncodedValue js_object_get_property_value(JS::Object* object, const char* name);

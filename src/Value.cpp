@@ -50,6 +50,26 @@ extern "C" {
         return decode_js_value(encoded).is_error();
     }
 
+    bool js_value_is_array(EncodedValue encoded)
+    {
+        auto result = decode_js_value(encoded).is_array(main_thread_vm());
+        if (result.is_error()) {
+            warnln("Error checking if value is array");
+            return false;
+        }
+        return result.value();
+    }
+
+    bool js_value_is_regexp(EncodedValue encoded)
+    {
+        auto result = decode_js_value(encoded).is_regexp(main_thread_vm());
+        if (result.is_error()) {
+            warnln("Error checking if value is regexp");
+            return false;
+        }
+        return result.value();
+    }
+
     EncodedValue js_object_get_property_value_at_index(JS::Object* object, int index)
     {
         JS::PropertyKey key(index);
