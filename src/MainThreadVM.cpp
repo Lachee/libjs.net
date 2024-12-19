@@ -1,8 +1,10 @@
 #include "Forward.h"
+#include "MainThreadVM.h"
 
 static RefPtr<JS::VM> s_main_thread_vm;
 
-ErrorOr<void> initialize_main_thread_vm() {
+ErrorOr<void> initialize_main_thread_vm()
+{
     dbgln("-- Creating a main thread vm");
     VERIFY(!s_main_thread_vm);
 
