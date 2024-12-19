@@ -72,4 +72,30 @@ extern "C" {
         }
         return encode_js_value(result.value());
     }
+
+    EncodedValue js_value_invoke(EncodedValue encoded)
+    {
+        auto value = decode_js_value(encoded);
+        VERIFY(value.is_function());
+
+        auto& function_object = value.as_function();
+        auto& relevant_realm = function_object.shape().realm();
+
+        prepare_to_run_script(relevant_realm);
+
+        dbgln("-> Calling {}", value.to_string_without_side_effects());
+        auto this_value = JS::js_undefined();
+        auto& vm = function_object.vm();
+        auto result = JS::call(vm, function_object, this_value);
+
+        clean_up_after_running_script(relevant_realm);
+
+        // vm.pop_execution_context();
+        if (result.is_error()) {
+            warnln("Error calling function");
+            return encode_js_value(JS::js_undefined());
+        }
+
+        return encode_js_value(result.value());
+    }
 }

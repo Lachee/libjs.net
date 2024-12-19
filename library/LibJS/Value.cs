@@ -14,6 +14,7 @@ namespace LibJS
 		[DllImport(Document.LibraryName)] static extern bool js_value_is_function(ulong value);
 		[DllImport(Document.LibraryName)] static extern bool js_value_is_constructor(ulong value);
 		[DllImport(Document.LibraryName)] static extern bool js_value_is_error(ulong value);
+		[DllImport(Document.LibraryName)] static extern ulong js_value_invoke(ulong value);
 
 		[FieldOffset(0)]
 		private double m_double;
@@ -59,6 +60,20 @@ namespace LibJS
 		public bool IsContructor => IsObject && js_value_is_constructor(m_encoded);
 		public bool IsError => IsObject && js_value_is_error(m_encoded);
 
+
+		internal Value(ulong encoded)
+		{
+			m_double = 0;
+			m_encoded = encoded;
+		}
+
+		internal Value(double value)
+		{
+			m_encoded = 0;
+			m_double = value;
+		}
+
+
 		/// <summary>Gets the value as a double</summary>
 		/// <returns></returns>
 		public double AsDouble() {
@@ -87,16 +102,11 @@ namespace LibJS
 			return Encoding.UTF8.GetString(buffer, 0, length);
 		}
 
-		internal Value(ulong encoded)
-		{
-			m_double = 0;
-			m_encoded = encoded;
-		}
-
-		internal Value(double value)
-		{
-			m_encoded = 0;
-			m_double = value;
+		public Value Invoke() {
+			if (!IsFunction)
+				throw new InvalidOperationException("Value must be a function");
+			ulong result = js_value_invoke(m_encoded);
+			return new Value(result);
 		}
 
 		public override string ToString()

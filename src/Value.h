@@ -26,4 +26,6 @@ extern "C" {
 
     EncodedValue js_object_get_property_value_at_index(JS::Object* object, int index);
     EncodedValue js_object_get_property_value(JS::Object* object, const char* name);
+
+    EncodedValue js_value_invoke(EncodedValue encoded);
 }

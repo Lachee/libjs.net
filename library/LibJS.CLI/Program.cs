@@ -46,6 +46,7 @@ Console.WriteLine("Result: {0}", result);
 
 // This still throws the same issue.
 Console.WriteLine("==========");
+result.Invoke();
 
 Console.WriteLine("==========");
 Console.WriteLine("Done!");
