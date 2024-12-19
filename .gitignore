@@ -35,6 +35,8 @@ CMakeFiles/
 vcpkg_installed/
 Toolchain/
 
+bin
+
 # Keep last to ensure .DS_Store is never tracked, even if otherwise allowed by any exception above.
 .DS_Store
 
