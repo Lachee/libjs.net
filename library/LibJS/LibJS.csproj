@@ -1,13 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="copy &quot;$(SolutionDir)..\Build\release\*.dll&quot; &quot;$(OutDir)&quot;" />
+    <Exec Command="xcopy &quot;$(SolutionDir)..\Build\release\*.dll&quot; &quot;$(OutDir)&quot; /Y /D" />
   </Target>
-
 </Project>
