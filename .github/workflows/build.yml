@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 jobs:
-  build-windows:
+  windows:
     runs-on: windows-latest
 
     steps:
@@ -34,9 +34,24 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
 
     - name: Iniitalize
-      working-directory: ${{env.GITHUB_WORKSPACE}}
+      shell: cmd
       run: initialize.bat
 
     - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
+      shell: cmd
       run: build.bat
+
+  linux:
+      runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup .NET Core SDK
+          uses: actions/setup-dotnet@v4.1.0
+
+        - name: Iniitalize
+          run: ./initialize.sh
+  
+        - name: Build
+          run: ./build.sh
