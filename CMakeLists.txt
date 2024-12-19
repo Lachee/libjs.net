@@ -20,6 +20,7 @@ message("AK_SOURCE_DIR\t${AK_SOURCE_DIR}")
 message("LIB_SOURCE_DIR\t${LIB_SOURCE_DIR}")
 message("VCPKG_ROOT\t${VCPKG_ROOT}")
 message("CMAKE_TOOLCHAIN_FILE\t${CMAKE_TOOLCHAIN_FILE}")
+message("Clang_DIR\t${Clang_DIR}")
 
 function(verify_sources_exist sources)
     foreach(source IN LISTS ${sources})
@@ -42,7 +43,6 @@ include("${LADYBIRD_DIR}/Meta/CMake/utils.cmake")
 
 add_definitions(-DLIBJS_SHARED)
 
-
 if(WIN32)
     if(MSVC)
         add_compile_options(/std:c++23)
@@ -63,11 +63,16 @@ if(WIN32)
 endif()
 
 #compiler-rt
-find_library(COMPILER_RT_LIBRARY
-    NAMES clang_rt.builtins-x86_64
-    PATHS "C:/llvm/lib/clang/18/lib/windows"
-)
-message("COMPILER_RT_LIBRARY\t${COMPILER_RT_LIBRARY}")
+if(WIN32)
+    find_package(Clang REQUIRED)
+    message("CLANG_INCLUDE_DIRS\t${CLANG_INCLUDE_DIRS}")
+    find_library(COMPILER_RT_LIBRARY
+        NAMES clang_rt.builtins-x86_64
+        PATHS "${CLANG_INCLUDE_DIRS}/../lib/clang/18/lib/windows"
+    )
+    message("COMPILER_RT_LIBRARY\t${COMPILER_RT_LIBRARY}")
+endif()
+
 #mman
 find_path(MMAN_DIR NAMES sys/mman.h PATH_SUFFIXES mman)
 find_library(MMAN_LIB mman)
