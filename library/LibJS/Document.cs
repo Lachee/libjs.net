@@ -17,7 +17,7 @@ namespace LibJS
         
         [DllImport(LibraryName)] static extern ulong document_evaluate(IntPtr document, string source, string source_name);
         
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, string message);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
         [DllImport(LibraryName)] static extern void document_set_on_console_log(IntPtr document, IntPtr callback);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void FunctionCallback(IntPtr args_ptr);
         [DllImport(LibraryName)] static extern void document_define_function(IntPtr document, string name, IntPtr callback);
