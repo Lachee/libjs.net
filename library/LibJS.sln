@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "bindings", "bindings.csproj", "{11C59621-84EF-4369-BC13-D9E4A1AA6305}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibJS.CLI", "LibJS.CLI/LibJS.CLI.csproj", "{11C59621-84EF-4369-BC13-D9E4A1AA6305}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibJS", "LibJS/LibJS.csproj", "{329AC71F-7C49-4BBC-8C6A-501FD01E16F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{11C59621-84EF-4369-BC13-D9E4A1AA6305}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11C59621-84EF-4369-BC13-D9E4A1AA6305}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11C59621-84EF-4369-BC13-D9E4A1AA6305}.Release|Any CPU.Build.0 = Release|Any CPU
+		{329AC71F-7C49-4BBC-8C6A-501FD01E16F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{329AC71F-7C49-4BBC-8C6A-501FD01E16F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{329AC71F-7C49-4BBC-8C6A-501FD01E16F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{329AC71F-7C49-4BBC-8C6A-501FD01E16F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

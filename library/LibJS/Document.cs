@@ -45,7 +45,8 @@ namespace LibJS
 
         public Value? Evaluate(string script, string? scriptName = null)
         {
-            document_load_script(m_ptr, script, scriptName ?? "Environment.Run");
+            // document_load_script(m_ptr, script, scriptName ?? "Environment.Run");
+            document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
             // var ptr = document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
             return null; // TODO: Implement values again
         }

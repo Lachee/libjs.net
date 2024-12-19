@@ -101,9 +101,9 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
     auto& realm = window()->realm();
     auto& vm = realm.vm();
 
-    auto& console_object = *realm.intrinsics().console_object();
-    LogClient console_client(console_object.console(), *this);
-    console_object.console().set_client(console_client);
+    // auto& console_object = *realm.intrinsics().console_object();
+    // LogClient console_client(console_object.console(), *this);
+    // console_object.console().set_client(console_client);
 
     JS::ThrowCompletionOr<JS::Value> result{ JS::js_undefined() };
 

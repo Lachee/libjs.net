@@ -29,8 +29,8 @@ output/
 .exrc
 .helix/
 
-dotnet/bin
-dotnet/obj
+library/*/bin
+library/*/obj
 CMakeFiles/
 vcpkg_installed/
 Toolchain/

@@ -1,17 +1,5 @@
 ﻿using LibJS;
 
-// Just copying DLLs over for rapid testing
-string dest = "./bin/Debug/net8.0";
-foreach (string dependent in Directory.GetFiles("../Build/release"))
-{
-    string extension = Path.GetExtension(dependent);
-    if (extension == ".dll" || extension == ".so")
-    {
-        string dependentName = Path.GetFileName(dependent);
-        System.IO.File.Copy(dependent, $"{dest}/{dependentName}", true);
-    }
-}
-
 ThreadPool.SetMaxThreads(1, 1);
 List<Task> pendingTasks = new List<Task>();
 
