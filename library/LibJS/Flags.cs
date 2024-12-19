@@ -10,7 +10,8 @@ namespace LibJS
         public const ulong POSITIVE_INFINITY_BITS = 0x7FF0000000000000;
         public const ulong NEGATIVE_INFINITY_BITS = 0xFFF0000000000000;
         public const ulong NEGATIVE_ZERO_BITS = 1UL << 63;
-        public const ulong BASE_TAG = 0x7FF8;
+        public const ulong BASE_TAG = 0x7FF8; 
+        public const ulong TAG_EXTRACTION = 0xFFFF000000000000;
         public const ulong IS_CELL_BIT = 0x8000 | BASE_TAG;
         public const ulong OBJECT_TAG = 0b001 | IS_CELL_BIT;
         public const ulong STRING_TAG = 0b010 | IS_CELL_BIT;

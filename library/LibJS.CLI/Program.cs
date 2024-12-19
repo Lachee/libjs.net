@@ -46,7 +46,6 @@ Console.WriteLine("Result: {0}", result);
 
 // This still throws the same issue.
 Console.WriteLine("==========");
-document.Call(result);
 
 Console.WriteLine("==========");
 Console.WriteLine("Done!");

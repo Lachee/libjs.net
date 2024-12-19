@@ -13,20 +13,17 @@ public:
     // JS::Value value();
 };
 
+JS::Value decode_js_value(EncodedValue encoded);
+EncodedValue encode_js_value(JS::Value value);
 
 extern "C" {
-    void js_value_free(GC::Root<JS::Value>* value);
+    // int js_value_to_string(JS::Value value, char* buff, int buffSize);
+    int js_value_to_string(EncodedValue value, char* buff, int buffSize);
 
+    bool js_value_is_function(EncodedValue encoded);
+    bool js_value_is_constructor(EncodedValue encoded);
+    bool js_value_is_error(EncodedValue encoded);
 
-    u16 js_value_tag(JS::Value* value);
-    u64 js_value_encoded(JS::Value* value);
-    int js_value_to_string(JS::Value* value, char* buff, int buffSize);
-    double js_value_as_double(JS::Value* value);
-    bool js_value_is_function(JS::Value* value);
-    bool js_value_is_constructor(JS::Value* value);
-    bool js_value_is_error(JS::Value* value);
-    JS::Value* js_value_call(Document* environment, JS::Value* value);
-
-    JS::Value* js_object_get_property_value_at_index(JS::Object* object, int index);
-    JS::Value* js_object_get_property_value(JS::Object* object, const char* name);
+    EncodedValue js_object_get_property_value_at_index(JS::Object* object, int index);
+    EncodedValue js_object_get_property_value(JS::Object* object, const char* name);
 }

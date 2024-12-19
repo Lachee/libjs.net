@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(SolutionDir)LibJS\$(OutDir)*.dll&quot; &quot;$(OutDir)&quot; /D /Y" />
+    <Exec Command="xcopy &quot;$(SolutionDir)..\build\Release\*.dll&quot; &quot;$(OutDir)&quot; /D /Y" />
   </Target>
 
 </Project>

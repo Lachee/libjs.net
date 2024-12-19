@@ -5,6 +5,7 @@
 #include "EnvironmentSettingsObject.h"
 #include "LogClient.h"
 #include "Script.h"
+#include "Value.h"
 
 #include <AK/Format.h>
 #include <AK/Try.h>
@@ -189,14 +190,15 @@ extern "C" {
         document->m_last_value = completion.value().value_or(JS::js_undefined());
     }
 
-    void document_evaluate(Document* document, const char* source, const char* source_name) {
+    EncodedValue document_evaluate(Document* document, const char* source, const char* source_name) {
         auto run_or_errored = document->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
-            return;
+            return encode_js_value(JS::js_undefined());
         }
 
         document->m_last_value = run_or_errored.value();
+        return encode_js_value(document->m_last_value);
     }
 
     void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
@@ -219,6 +221,9 @@ extern "C" {
                 arguments->indexed_properties().append(argument);
             }
 
+            dbgln("-> Array length encoded(): {}", arguments->get("length").value().encoded());
+            dbgln("-> Array length is_double: {}", arguments->get("length").value().is_double());
+            dbgln("-> Array length is_int: {}", arguments->get("length").value().is_int32());
             function(*arguments);
             return JS::js_undefined();
             });

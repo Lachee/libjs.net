@@ -12,6 +12,8 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
 
+using EncodedValue = u64;
+
 class Document;
 class EnvironmentSettingsObject;
 class GameWindow;

@@ -27,7 +27,8 @@ namespace LibJS {
         /// </summary>
         /// <returns></returns>
         public int GetCount() {
-            return GetProperty(LengthName).AsInt32();
+            var val = GetProperty(LengthName);
+            return val.AsInt();
         }
 
         public IEnumerator<Value> GetEnumerator()

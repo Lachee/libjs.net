@@ -14,7 +14,9 @@ namespace LibJS
 
         [DllImport(LibraryName)] static extern IntPtr document_create();
         [DllImport(LibraryName)] static extern void document_load_script(IntPtr document, string source, string source_name);
-        [DllImport(LibraryName)] static extern IntPtr document_evaluate(IntPtr document, string source, string source_name);
+        
+        [DllImport(LibraryName)] static extern ulong document_evaluate(IntPtr document, string source, string source_name);
+        
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, string message);
         [DllImport(LibraryName)] static extern void document_set_on_console_log(IntPtr document, IntPtr callback);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void FunctionCallback(IntPtr args_ptr);
@@ -43,12 +45,10 @@ namespace LibJS
             document_define_function(m_ptr, name, Marshal.GetFunctionPointerForDelegate(action));
         }
 
-        public Value? Evaluate(string script, string? scriptName = null)
+        public Value Evaluate(string script, string? scriptName = null)
         {
-            // document_load_script(m_ptr, script, scriptName ?? "Environment.Run");
-            document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
-            // var ptr = document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
-            return null; // TODO: Implement values again
+            var encoded = document_evaluate(m_ptr, script, scriptName ?? "Environment.Run");
+            return new Value(encoded);
         }
 
         /// <summary>
