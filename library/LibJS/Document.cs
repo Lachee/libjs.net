@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace LibJS
 {
@@ -17,7 +18,7 @@ namespace LibJS
         
         [DllImport(LibraryName)] static extern ulong document_evaluate(IntPtr document, string source, string source_name);
         
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, [MarshalAs(UnmanagedType.LPUTF8Str)] string message);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, IntPtr buff, int buffSize);
         [DllImport(LibraryName)] static extern void document_set_on_console_log(IntPtr document, IntPtr callback);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void FunctionCallback(IntPtr args_ptr);
         [DllImport(LibraryName)] static extern void document_define_function(IntPtr document, string name, IntPtr callback);
@@ -28,13 +29,18 @@ namespace LibJS
 
         public event Action<LogLevel, string>? OnLog;
 
-        public Document()
-        {
-            m_ptr = document_create();
+		public Document()
+		{
+			m_ptr = document_create();
 
-            OnLogCallback onLogCallback = new OnLogCallback((level, msg) => OnLog?.Invoke((LogLevel)level, msg));
-            document_set_on_console_log(m_ptr, Marshal.GetFunctionPointerForDelegate(onLogCallback));
-        }
+			OnLogCallback onLogCallback = new OnLogCallback((level, buff, buffSize) =>
+			{
+                byte[] buffer = new byte[buffSize];
+                Marshal.Copy(buff, buffer, 0, buffSize);
+				OnLog?.Invoke((LogLevel)level, Encoding.UTF8.GetString(buffer));
+			});
+			document_set_on_console_log(m_ptr, Marshal.GetFunctionPointerForDelegate(onLogCallback));
+		}
 
         public void DefineFunction(string name, NativeFunction func)
         {

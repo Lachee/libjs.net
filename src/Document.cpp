@@ -90,7 +90,8 @@ bool Document::log(JS::Console::LogLevel log_level, StringView content)
 {
     if (m_on_console_log_ptr)
     {
-        m_on_console_log_ptr(log_level, content.characters_without_null_termination());
+
+        m_on_console_log_ptr(log_level, content.characters_without_null_termination(), content.length());
         return true;
     }
     return false;
@@ -202,8 +203,8 @@ extern "C" {
         return encode_js_value(document->m_last_value);
     }
 
-    void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*)) {
-        document->set_on_console_log(Function<void(JS::Console::LogLevel, const char*)>(on_console_log));
+    void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*, int)) {
+        document->set_on_console_log(Function<void(JS::Console::LogLevel, const char*, int)>(on_console_log));
     }
 
     void document_define_function(Document* document, const char* name, void (*function)(JS::Array&)) {

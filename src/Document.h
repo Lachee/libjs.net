@@ -15,7 +15,7 @@ class Document final : public JS::GlobalObject {
 private:
     GC::Ptr<GameWindow> m_window;
     GC::Ptr<JS::Realm> m_realm;
-    Function<void(JS::Console::LogLevel, const char*)> m_on_console_log_ptr{ nullptr };
+    Function<void(JS::Console::LogLevel, const char*, int)> m_on_console_log_ptr{ nullptr };
 
 protected:
     Document(JS::Realm&);
@@ -32,7 +32,7 @@ public:
     GC::Ptr<JS::Realm> realm() { return m_realm; }
 
     bool log(JS::Console::LogLevel, StringView content);
-    void set_on_console_log(Function<void(JS::Console::LogLevel, const char*)> on_console_log) {
+    void set_on_console_log(Function<void(JS::Console::LogLevel, const char*, int)> on_console_log) {
         m_on_console_log_ptr = move(on_console_log);
     }
 
@@ -51,7 +51,7 @@ extern "C" {
     /** @deprecated */
     void document_load_script(Document* document, const char* source, const char* source_name);
     EncodedValue document_evaluate(Document* document, const char* source, const char* source_name);
-    void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*));
+    void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*, int));
     void document_define_function(Document* document, const char* name, void (*function)(JS::Array&));
 
     /** @deprecated */
