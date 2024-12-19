@@ -1,0 +1,9 @@
+#pragma once
+
+#include <AK/Error.h>
+#include <AK/Types.h>
+#include <AK/HashMap.h>
+
+static HashMap<u32, void (*)(void)> function_map;
+
+ErrorOr<int> try_run_script(const char *data);

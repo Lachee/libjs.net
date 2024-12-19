@@ -3,7 +3,7 @@ project(LibJSNet)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
@@ -21,6 +21,14 @@ message("LIB_SOURCE_DIR\t${LIB_SOURCE_DIR}")
 message("VCPKG_ROOT\t${VCPKG_ROOT}")
 message("CMAKE_TOOLCHAIN_FILE\t${CMAKE_TOOLCHAIN_FILE}")
 
+function(verify_sources_exist sources)
+    foreach(source IN LISTS ${sources})
+        if(NOT EXISTS "${source}")
+            message(FATAL_ERROR "Source file ${source} does not exist.")
+        endif()
+    endforeach()
+endfunction()
+
 include("${LADYBIRD_DIR}/Meta/CMake/common_compile_options.cmake")
 include("${LADYBIRD_DIR}/Meta/CMake/lagom_compile_options.cmake")
 add_compile_definitions(_POSIX_SOURCE _POSIX_C_SOURCE)
@@ -28,6 +36,7 @@ add_compile_options(
     -Wno-unused-variable
     -Wno-unused-parameter
     -Wno-unused-function
+    -Wno-vla-cxx-extension
 )
 include("${LADYBIRD_DIR}/Meta/CMake/utils.cmake")
 
@@ -83,6 +92,17 @@ message("SIMDUTF_VERSION\t${SIMDUTF_VERSION}")
 find_path(DIRENT_DIR NAMES dirent.h PATH_SUFFIXES dirent)
 message("DIRENT_DIR\t${DIRENT_DIR}")
 
+# pthread
+# find_package(Threads REQUIRED)
+# message("Threads_FOUND\t${Threads_FOUND}")
+# if(Threads_FOUND)
+# set(PTHREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
+# set(PTHREAD_DIR ${CMAKE_THREAD_LIBS_DIR})
+# message("PTHREAD_LIB\t${PTHREAD_LIB}")
+# message("PTHREAD_DIR\t${PTHREAD_DIR}")
+# endif()
+
+
 # Create a temporary Debug.h.in template
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Debug.h.in "#pragma once")
 configure_file(
@@ -101,6 +121,7 @@ configure_file(
 
 # == LibSyntax ==
 file(GLOB_RECURSE LIBSYNTAX_SOURCES "${LIB_SOURCE_DIR}/LibSyntax/*.cpp")
+verify_sources_exist(LIBSYNTAX_SOURCES)
 add_library(LibSyntax ${LIBSYNTAX_SOURCES})
 target_include_directories(LibSyntax PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -116,7 +137,7 @@ file(GLOB_RECURSE TMP "${LIB_SOURCE_DIR}/LibCrypto/BigFraction/*.cpp")
 list(APPEND LIBCRYPTO_SOURCES ${TMP})
 file(GLOB_RECURSE TMP "${LIB_SOURCE_DIR}/LibCrypto/NumberTheory/*.cpp")
 list(APPEND LIBCRYPTO_SOURCES ${TMP})
-
+verify_sources_exist(LIBCRYPTO_SOURCES)
 add_library(LibCrypto ${LIBCRYPTO_SOURCES})
 target_include_directories(LibCrypto PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -128,6 +149,7 @@ target_include_directories(LibCrypto PRIVATE
 
 # == LibUnicode ==
 file(GLOB_RECURSE LIBUNICODE_SOURCES "${LIB_SOURCE_DIR}/LibUnicode/*.cpp")
+verify_sources_exist(LIBUNICODE_SOURCES)
 add_library(LibUnicode ${LIBUNICODE_SOURCES})
 target_link_libraries(LibUnicode PRIVATE ICU::i18n ICU::uc ICU::data simdutf::simdutf)
 target_include_directories(LibUnicode PRIVATE ${ICU_INCLUDE_DIRS})
@@ -142,6 +164,7 @@ target_include_directories(LibUnicode PRIVATE
 
 # == LibRegex ==
 file(GLOB_RECURSE LIBREGEX_SOURCES "${LIB_SOURCE_DIR}/LibRegex/*.cpp")
+verify_sources_exist(LIBREGEX_SOURCES)
 add_library(LibRegex ${LIBREGEX_SOURCES})
 target_include_directories(LibRegex PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -165,15 +188,18 @@ set(LIBCORE_SOURCES
 
 if(WIN32)
     list(APPEND LIBCORE_SOURCES "${LIB_SOURCE_DIR}/LibCore/SystemWindows.cpp")
+    # list(APPEND LIBCORE_SOURCES "${LIB_SOURCE_DIR}/LibCore/EventLoopImplementationWindows.cpp")
 else()
     list(APPEND LIBCORE_SOURCES "${LIB_SOURCE_DIR}/LibCore/System.cpp")
+    # list(APPEND LIBCORE_SOURCES "${LIB_SOURCE_DIR}/LibCore/EventLoopImplementationUnix.cpp")
 endif()
-
+verify_sources_exist(LIBCORE_SOURCES)
 add_library(LibCore ${LIBCORE_SOURCES})
 target_include_directories(LibCore PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${DIRENT_DIR}
     ${MMAN_DIR}
+    # ${PTHREAD_DIR}
     "${LIB_SOURCE_DIR}/LibGC"
     "${LIB_SOURCE_DIR}/LibGC/.."
     "${AK_SOURCE_DIR}/.."
@@ -182,6 +208,7 @@ target_link_libraries(LibCore PUBLIC LibAK)
 
 # == LibGC ==
 file(GLOB_RECURSE LIBGC_SOURCES "${LIB_SOURCE_DIR}/LibGC/*.cpp")
+verify_sources_exist(LIBGC_SOURCES)
 add_library(LibGC ${LIBGC_SOURCES})
 target_include_directories(LibGC PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -194,6 +221,7 @@ target_link_libraries(LibGC PUBLIC LibCore)
 
 # == LibFileSystem ==
 file(GLOB_RECURSE LIBFILESYSTEM_SOURCES "${LIB_SOURCE_DIR}/LibFileSystem/FileSystem.cpp")
+verify_sources_exist(LIBFILESYSTEM_SOURCES)
 add_library(LibFileSystem ${LIBFILESYSTEM_SOURCES})
 target_include_directories(LibFileSystem PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -242,6 +270,7 @@ if(WIN32)
 else()
     list(APPEND LIBAK_SOURCES "${AK_SOURCE_DIR}/LexicalPath.cpp")
 endif()
+verify_sources_exist(LIBAK_SOURCES)
 add_library(LibAK ${LIBAK_SOURCES})
 target_include_directories(LibAK PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -257,6 +286,7 @@ endif()
 # -- Add all the files
 file(GLOB_RECURSE LIBJS_SOURCES "${LIB_SOURCE_DIR}/LibJS/*.cpp")
 list(FILTER LIBJS_SOURCES EXCLUDE REGEX "Tests|Contrib")
+verify_sources_exist(LIBJS_SOURCES)
 add_library(LibJS ${LIBJS_SOURCES})
 target_include_directories(LibJS PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -271,22 +301,23 @@ if(!WIN32)
     target_compile_options(LibJS PRIVATE -fno-omit-frame-pointer)
 else()
     # - Include demangling
-    file(READ "src/AK/Demangle.h" FILE_CONTENT)
+    file(READ "AK/Demangle.h" FILE_CONTENT)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/AK/Demangle.h "${FILE_CONTENT}")
 endif()
 target_link_libraries(LibJS LibGC LibCrypto LibCore LibAK LibUnicode LibFileSystem)
 
 # == LibJSNet ==
 file(GLOB LIBJSNET_SOURCE src/*.cpp)
+verify_sources_exist(LIBJSNET_SOURCE)
 add_library(LibJSNet SHARED ${LIBJSNET_SOURCE})
 # target_compile_definitions(LibJSNet PRIVATE BUILDING_LIBJS)
 target_include_directories(LibJSNet PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${MMAN_DIR}
+    "${LADYBIRD_DIR}"
+    "${LIB_SOURCE_DIR}"
     ${SRC_DIR}
     ${SRC_DIR}/..
-    "${AK_SOURCE_DIR}/.."
-    "${LIB_SOURCE_DIR}/"
 )
 
 target_link_libraries(LibJSNet PRIVATE simdutf::simdutf)
@@ -301,6 +332,7 @@ target_link_libraries(LibJSNet PRIVATE LibFileSystem)
 if(WIN32)
     target_link_libraries(LibJSNet PRIVATE ${COMPILER_RT_LIBRARY})
     target_link_libraries(LibJSNet PRIVATE ${MMAN_LIB})
+    # target_link_libraries(LibJSNet PRIVATE ${PTHREAD_LIB})
     target_link_libraries(LibJSNet PRIVATE ICU::i18n)
     target_link_libraries(LibJSNet PRIVATE ICU::uc)
     target_link_libraries(LibJSNet PRIVATE ICU::data)
