@@ -30,6 +30,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Cache VCPKG
+      uses: actions/cache@v3
+      with:
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+        path: |
+          vcpkg_installed
+          Build/vcpkg
+          Build\caches\vcpkg-binary-cache
+
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
@@ -68,6 +78,15 @@ jobs:
             sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
             sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
     
+        - name: Cache VCPKG
+          uses: actions/cache@v3
+          with:
+            key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+            path: |
+              vcpkg_installed
+              Build/vcpkg
+              Build\caches\vcpkg-binary-cache
+            
         - name: Initialize
           shell: bash
           run: ./initialize.sh
