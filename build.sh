@@ -4,10 +4,8 @@ mkdir bin
 
 # Build the project
 cmake --preset default .
-cd Build/release
-ninja
-cp -r *.so ../../bin
-cd ../../
+cmake --build Build/release
+cp -r Build/release/*.so bin
 
 # Build the C# project
 echo "Building Managed Libraries..."

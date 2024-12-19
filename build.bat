@@ -5,10 +5,8 @@ mkdir bin
 :: Build the C++ project
 echo "Building Unmanaged Libraries..."
 cmake --preset windows . 
-cd build/release || exit /b 1
-ninja || exit /b 1
-cp -r *.dll ../../bin
-cd ../../
+cmake --build Build/release
+cp -r Build/release/*.dll bin
 
 :: Build the C# project
 echo "Building Managed Libraries..."
