@@ -163,7 +163,6 @@ GC::Ptr<Script> Document::load_script(StringView source, StringView source_name)
 {
     auto& realm = window()->realm();
     auto script = Script::create(source_name.to_byte_string(), source, realm);
-
     m_current_script = move(script);
     return script;
 }
@@ -173,23 +172,6 @@ extern "C" {
         auto document = Document::create_and_initialize();
         s_document = GC::make_root(document);
         return document.ptr();
-    }
-
-    void document_load_script(Document* document, const char* source, const char* source_name)
-    {
-        auto script = document->load_script(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
-        if (!script) {
-            warnln("Failed to load script");
-            return;
-        }
-
-        auto completion = script->run();
-        if (completion.is_error()) {
-            warnln("Failed to run script");
-            return;
-        }
-
-        document->m_last_value = completion.value().value_or(JS::js_undefined());
     }
 
     EncodedValue document_evaluate(Document* document, const char* source, const char* source_name) {
@@ -228,35 +210,5 @@ extern "C" {
             });
 
         window->define_native_function(realm, key, move(function_object), 0, JS::Attribute::Writable | JS::Attribute::Configurable);
-    }
-
-    void document_call_last_value(Document* document)
-    {
-        auto value = s_document->m_last_value;
-
-        if (!value.is_function()) {
-            warnln("Error: value is not a function");
-            return;
-        }
-
-        auto& function_object = value.as_function();
-        auto& relevant_realm = function_object.shape().realm();
-
-        prepare_to_run_script(relevant_realm);
-
-        dbgln("-> Calling {}", value.to_string_without_side_effects());
-        auto this_value = document->window();
-        auto& vm = function_object.vm();
-        auto result = JS::call(vm, function_object, this_value);
-
-        clean_up_after_running_script(relevant_realm);
-
-        // vm.pop_execution_context();
-        if (result.is_error()) {
-            warnln("Error calling function");
-            return;
-        }
-
-        dbgln("-> Call result: {}", result.value().to_string_without_side_effects());
     }
 }
