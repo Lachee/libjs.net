@@ -52,7 +52,7 @@ jobs:
         run: |
           where clang
           where cmake
-          
+
       - name: Install Ninja
         shell: cmd
         run: choco install ninja -y
@@ -69,6 +69,7 @@ jobs:
         run: build.bat
         env:
           CMAKE_VERBOSE_MAKEFILE: 1
+          Clang_DIR: C:\Program Files\LLVM\lib\cmake\clang
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
