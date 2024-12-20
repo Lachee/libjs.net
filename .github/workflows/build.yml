@@ -29,7 +29,7 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-      Clang_DIR: C:\Program Files (x86)\LLVM\lib\cmake\clang
+      Clang_DIR: C:\Program Files\LLVM\lib\cmake\clang
 
     steps:
       - uses: actions/checkout@v4
@@ -51,10 +51,10 @@ jobs:
         run: |
           where clang
           where cmake
-          dir C:\Program Files (x86)\LLVM\
-          dir C:\Program Files (x86)\LLVM\lib\
-          dir C:\Program Files (x86)\LLVM\lib\cmake\
-          dir C:\Program Files (x86)\LLVM\lib\cmake\clang
+          dir C:\Program Files\LLVM\
+          dir C:\Program Files\LLVM\lib\
+          dir C:\Program Files\LLVM\lib\cmake\
+          dir C:\Program Files\LLVM\lib\cmake\clang
           dir "%Clang_DIR%"
 
       - name: Install Ninja
@@ -82,7 +82,8 @@ jobs:
 
   linux:
     runs-on: ubuntu-24.04
-    
+    needs: windows # Temporarily disabled until the Windows job is fixed.
+
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
