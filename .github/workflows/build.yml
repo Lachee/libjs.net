@@ -29,7 +29,8 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-      CMAKE_PREFIX_PATH: tools/llvm/lib/cmake
+      LLVM_DIR: ${{github.workspace}}/tools/llvm/lib/cmake/llvm
+      Clang_DIR: ${{github.workspace}}/tools/llvm/lib/cmake/clang
 
     steps:
       - uses: actions/checkout@v4
