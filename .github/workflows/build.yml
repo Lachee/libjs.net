@@ -130,15 +130,15 @@ jobs:
         run: ./initialize.sh
 
       - name: Configure CMAKE
-        shell: cmd
+        shell: bash
         run: cmake --preset default .
 
       - name: Build CMAKE
-        shell: cmd
+        shell: bash
         run: cmake --build Build/release
 
       - name: Build .NET
-        shell: cmd
+        shell: bash
         working-directory: library
         run: dotnet build -o ../bin
 
