@@ -48,6 +48,9 @@ jobs:
         directory: ${{ runner.temp }}/llvm
         env: true
 
+    - name: Install Ninja
+      uses: seanmiddleditch/gha-setup-ninja@master
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
