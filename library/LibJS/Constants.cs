@@ -1,10 +1,16 @@
 namespace LibJS
 {
+    internal static class Consts 
+    {
+        public const string LibraryName = "LibJSNet";
+        public const int StringMarshalLength = 2048;
+    }
+
     /// <summary>
     /// Tags for the GC and JS values
     /// </summary>
     /// <remarks>Based of the values within Ladybird</remarks>
-    internal static class Flags
+    internal static class Tags
     {
         public const ulong CANON_NAN_BITS = 0x7FF8000000000000;
         public const ulong POSITIVE_INFINITY_BITS = 0x7FF0000000000000;
