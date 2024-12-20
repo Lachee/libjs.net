@@ -42,9 +42,9 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
             core.exportVariable('ACTIONS_RUNTIME_URL', process.env.ACTIONS_RUNTIME_URL || '');
 
-      - name: Install Ninja
+      - name: Install LLVM/Clang
         shell: cmd
-        run: choco install llvm -y
+        run: choco install llvm -y --force --version 19.1.5 
 
       - name: Verify LLVM/Clang Installation
         shell: cmd
