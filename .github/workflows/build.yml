@@ -29,9 +29,6 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-      CMAKE_PREFIX_PATH: ${{github.workspace}}/tools/llvm/lib/cmake
-      LLVM_DIR: ${{github.workspace}}/tools/llvm/lib/cmake/llvm
-      Clang_DIR: ${{github.workspace}}/tools/llvm/lib/cmake/clang
 
     steps:
       - uses: actions/checkout@v4
@@ -44,19 +41,17 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
             core.exportVariable('ACTIONS_RUNTIME_URL', process.env.ACTIONS_RUNTIME_URL || '');
 
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+      - name: Set up Clang
+        uses: egor-tensin/setup-clang@v1
         with:
-          version: 18
-          directory: tools/llvm
-          env: true
+          version: latest
+          platform: x64
 
       - name: Verify LLVM/Clang Installation
         shell: cmd
         run: |
-          dir tools\llvm\lib\cmake
-          dir tools\llvm\lib\cmake\llvm
-          dir tools\llvm\lib\cmake\clang
+          where clang
+          where cmake
           
       - name: Install Ninja
         shell: cmd
