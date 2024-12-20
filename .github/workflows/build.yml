@@ -29,6 +29,7 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      Clang_DIR: "C:/Program Files/LLVM/lib/cmake/clang"
 
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +53,7 @@ jobs:
         run: |
           where clang
           where cmake
+          dir "%Clang_DIR%"
 
       - name: Install Ninja
         shell: cmd
@@ -69,7 +71,6 @@ jobs:
         run: build.bat
         env:
           CMAKE_VERBOSE_MAKEFILE: 1
-          Clang_DIR: C:\Program Files\LLVM\lib\cmake\clang
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

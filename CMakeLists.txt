@@ -18,6 +18,7 @@ message("DOTNET_DIR\t${DOTNET_DIR}")
 message("LADYBIRD_DIR\t${LADYBIRD_DIR}")
 message("AK_SOURCE_DIR\t${AK_SOURCE_DIR}")
 message("LIB_SOURCE_DIR\t${LIB_SOURCE_DIR}")
+message("Clang_DIR\t${Clang_DIR}")
 message("VCPKG_ROOT\t${VCPKG_ROOT}")
 message("CMAKE_TOOLCHAIN_FILE\t${CMAKE_TOOLCHAIN_FILE}")
 
@@ -41,7 +42,6 @@ add_compile_options(
 include("${LADYBIRD_DIR}/Meta/CMake/utils.cmake")
 
 add_definitions(-DLIBJS_SHARED)
-
 
 if(WIN32)
     if(MSVC)
