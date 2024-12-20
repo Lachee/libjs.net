@@ -49,7 +49,8 @@ jobs:
         env: true
 
     - name: Install Ninja
-      uses: seanmiddleditch/gha-setup-ninja@master
+      shell: cmd
+      run: choco install ninja -y
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
