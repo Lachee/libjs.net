@@ -29,6 +29,7 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      CMAKE_PREFIX_PATH: ${{github.workspace}}/tools/llvm/lib/cmake
       LLVM_DIR: ${{github.workspace}}/tools/llvm/lib/cmake/llvm
       Clang_DIR: ${{github.workspace}}/tools/llvm/lib/cmake/clang
 
@@ -50,6 +51,13 @@ jobs:
           directory: tools/llvm
           env: true
 
+      - name: Verify LLVM/Clang Installation
+        shell: cmd
+        run: |
+          dir tools\llvm\lib\cmake
+          dir tools\llvm\lib\cmake\llvm
+          dir tools\llvm\lib\cmake\clang
+          
       - name: Install Ninja
         shell: cmd
         run: choco install ninja -y
@@ -64,6 +72,8 @@ jobs:
       - name: Build
         shell: cmd
         run: build.bat
+        env:
+          CMAKE_VERBOSE_MAKEFILE: 1
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +83,7 @@ jobs:
 
   linux:
     runs-on: ubuntu-24.04
-
+    
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
