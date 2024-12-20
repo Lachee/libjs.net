@@ -59,12 +59,18 @@ jobs:
       shell: cmd
       run: build.bat
 
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: window-artifacts
+        path: bin/
+
   linux:
       runs-on: ubuntu-24.04
 
       env: 
         VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-        
+
       steps:
         - uses: actions/checkout@v4
 
@@ -104,3 +110,9 @@ jobs:
         - name: Build
           shell: bash
           run: ./build.sh
+
+        - name: Upload Artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: ubuntu-24-artifacts
+            path: bin/
