@@ -40,5 +40,10 @@ Its recommend to implement your own functions and objects in C++ rather than C# 
 ## Documentation
 Documentation is not yet implemented. Look at `library/LibJS.CLI/program.cs` for examples on implementation.
 
+## Contribution
+I am more than happy to accept contributions, but this project is still fairly small and unorganised. I am mainly looking at help with the Unmanaged side of things as im a beginner and still learning.
 
+Suggestions and API requests are welcomed.
 
+## License
+This project will follow [Ladybird's License](https://github.com/LadybirdBrowser/ladybird/blob/master/LICENSE) and will mirror that. It is currently BSD 2-Clause.
