@@ -42,20 +42,26 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
             core.exportVariable('ACTIONS_RUNTIME_URL', process.env.ACTIONS_RUNTIME_URL || '');
 
-      - name: Install LLVM/Clang
+      # - name: Install LLVM/Clang
+      #   shell: cmd
+      #   run: choco install llvm -y --force --version 19.1.5 
+
+      - name: Download and Extract LLVM/Clang
         shell: cmd
-        run: choco install llvm -y --force --version 19.1.5 
+        run: |
+          curl -L -o clang+llvm-18.1.8-x86_64-pc-windows-msvc.tar.xz https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-pc-windows-msvc.tar.xz
+          tar -xf clang+llvm-18.1.8-x86_64-pc-windows-msvc.tar.xz -C C:\
+          move C:\clang+llvm-18.1.8-x86_64-pc-windows-msvc C:\llvm
+        env:
+          PATH: C:\llvm\bin;%PATH%
+          Clang_DIR: C:\llvm\lib\cmake\clang
 
       - name: Verify LLVM/Clang Installation
         shell: cmd
         run: |
-          where clang
+          where clang-cl
           where cmake
-          dir C:\Program Files\LLVM\
-          dir C:\Program Files\LLVM\lib\
-          dir C:\Program Files\LLVM\lib\cmake\
-          dir C:\Program Files\LLVM\lib\cmake\clang
-          dir "%Clang_DIR%"
+          dir C:\llvm\lib\cmake\clang
 
       - name: Install Ninja
         shell: cmd
