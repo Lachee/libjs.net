@@ -103,7 +103,6 @@ extern "C" {
 
         prepare_to_run_script(relevant_realm);
 
-        dbgln("-> Calling {}", value.to_string_without_side_effects());
         auto this_value = JS::js_undefined();
         auto& vm = function_object.vm();
         auto result = JS::call(vm, function_object, this_value);

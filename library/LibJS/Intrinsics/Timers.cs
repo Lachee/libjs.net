@@ -17,20 +17,26 @@ namespace LibJS.Intrinsics
 			m_timers = new Dictionary<int, Task>(capacity);
 		}
 
-		public void Register(Document document)
+		/// <summary>
+		/// Creates a new Timer intrinsic and registers it to the document.
+		/// </summary>
+		/// <param name="document"></param>
+		/// <returns></returns>
+		public static Timers Create(Document document)
 		{
-			document.DefineFunction("setTimeout", SetTimeout);
-			document.DefineFunction("setInterval", SetInterval);
-
-			document.DefineFunction("clearTimeout", ClearTimeout);
-			document.DefineFunction("clearInterval", ClearTimeout);
-		}
-
-		public static Timers Create(Document document) {
 			Timers timers = new Timers();
 			timers.Register(document);
 			return timers;
 		}
+
+		public void Register(Document document)
+		{
+			document.DefineFunction("setTimeout", SetTimeout);
+			document.DefineFunction("setInterval", SetInterval);
+			document.DefineFunction("clearTimeout", ClearTimeout);
+			document.DefineFunction("clearInterval", ClearTimeout);
+		}
+
 
 		/// <summary>
 		/// Waits for all pending timers to finish
@@ -41,6 +47,14 @@ namespace LibJS.Intrinsics
 			{
 				await m_timers.First().Value.WaitAsync(cancellationToken);
 			}
+		}
+
+		/// <summary>
+		/// Clears all timers
+		/// </summary>
+		public void ClearAll()
+		{
+			m_timers.Clear();
 		}
 
 		private Value SetTimeout(Document doc, Array args) 

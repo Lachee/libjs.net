@@ -8,6 +8,10 @@ namespace LibJS.Intrinsics
 {
 	internal interface IIntrinsic
 	{
-		public void Register(Document documnet);
+		/// <summary>
+		/// Registers the intrinsic to the document
+		/// </summary>
+		/// <param name="document"></param>
+		public void Register(Document document);
 	}
 }
