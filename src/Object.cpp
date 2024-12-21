@@ -1,5 +1,7 @@
 #include "Object.h"
 #include "Forward.h"
+#include "MainThreadVM.h"
+#include "ExternError.h"
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PropertyKey.h>
@@ -8,6 +10,14 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 
 extern "C" {
+
+    EncodedValue js_object_create_error(const char* message)
+    {
+        auto& vm = main_thread_vm();
+        auto realm = vm.current_realm();
+        auto error = ExternError::create(*realm, StringView{ message, strlen(message) });
+        return encode_js_value(error);
+    }
 
     EncodedValue js_object_get_property_value_at_index(EncodedValue object, int index)
     {

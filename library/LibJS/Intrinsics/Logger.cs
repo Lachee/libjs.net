@@ -10,7 +10,7 @@ namespace LibJS.Intrinsics
 	public class Logger : IIntrinsic
 	{
 		public bool UseColor { get; set; } = true;
-		public string Prefix { get; set; } = ":: ";
+		public string Prefix { get; set; } = "";
 
 		public void Register(Document document)
 		{
@@ -49,6 +49,7 @@ namespace LibJS.Intrinsics
 
 		public virtual string Format(LogLevel logLevel, string message) 
 		{
+			if (UseColor) return message;
 			return $"{Prefix} [{logLevel}] {message}";
 		}
 	}

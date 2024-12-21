@@ -48,9 +48,7 @@ namespace LibJS
 				} 
                 catch(Exception e)
                 {
-                    // TODO: Give the error back to JS land
-                    Console.WriteLine("Function threw a {0}: {1}\n{2}", e.GetType().Name, e.Message, e.StackTrace);
-					return Value.Undefined.Encoded;
+					return Object.Create(e).Value.Encoded;
 				}
 			});
 			document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));
@@ -67,9 +65,7 @@ namespace LibJS
 				}
 				catch (Exception e)
 				{
-					// TODO: Give the error back to JS land
-                     Console.WriteLine("Function threw a {0}: {1}\n{2}", e.GetType().Name, e.Message, e.StackTrace);
-                    return Value.Undefined.Encoded;
+                    return Object.Create(e).Value.Encoded;
 				}
             });
             document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));

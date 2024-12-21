@@ -6,6 +6,7 @@
 #include "LogClient.h"
 #include "Script.h"
 #include "Value.h"
+#include "ExternError.h"
 
 #include <AK/Format.h>
 #include <AK/Try.h>
@@ -136,24 +137,28 @@ ErrorOr<JS::Value> Document::evaluate(StringView source, StringView source_name)
 
     // Error Handling
     auto handle_exception = [&](JS::Value thrown_value) -> ErrorOr<void> {
-        warnln("Uncaught exception:");
-        // TODO: Fix This
+        prepare_to_run_script(realm);
         auto strval = MUST(thrown_value.to_string(vm));
-        warnln("{}", strval);
-        warnln();
+        clean_up_after_running_script(realm);
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
+        {
+            log(JS::Console::LogLevel::Error, strval);
             return {};
-        warnln("{}", static_cast<JS::Error const&>(thrown_value.as_object())
-            .stack_string(JS::CompactTraceback::Yes));
+        }
+
+        auto stack_trace = static_cast<JS::Error const&>(thrown_value.as_object()).stack_string(JS::CompactTraceback::Yes);
+        auto formatted = TRY(AK::String::formatted("Uncaught {}\n{}", strval, stack_trace));
+        log(JS::Console::LogLevel::Error, formatted);
         return {};
         };
 
 
     if (result.is_error()) {
         VERIFY(result.throw_completion().value().has_value());
-        TRY(handle_exception(*result.release_error().value()));
-        return Error::from_string_literal("Uncaught exception");
+        auto thrown_value = *result.release_error().value();
+        TRY(handle_exception(thrown_value));
+        return thrown_value;
     }
 
     return result.value();
@@ -209,10 +214,11 @@ extern "C" {
             EncodedValue encodedResult = function(encode_js_value(arguments_value));
             auto value = decode_js_value(encodedResult);
             if (value.is_error()) {
-                return throw_completion(value);
+                auto& error = static_cast<ExternError const&>(value.as_object());
+                return JS::Completion{ JS::Completion::Type::Throw, value };
             }
 
-            return decode_js_value(encodedResult);
+            return value;
             });
 
         window->define_native_function(realm, key, move(function_object), 0, JS::Attribute::Writable | JS::Attribute::Configurable);

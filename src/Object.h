@@ -9,7 +9,7 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 
 extern "C" {
-
+    EncodedValue js_object_create_error(const char* message);
     EncodedValue js_object_get_property_value_at_index(EncodedValue object, int index);
     EncodedValue js_object_get_property_value(EncodedValue object, const char* name);
 

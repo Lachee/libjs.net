@@ -7,6 +7,7 @@ namespace LibJS
     {
         [DllImport(Consts.LibraryName)] protected static extern ulong js_object_get_property_value_at_index(ulong value, int index);
         [DllImport(Consts.LibraryName)] protected static extern ulong js_object_get_property_value(ulong value, string name);
+        [DllImport(Consts.LibraryName)] private static extern ulong js_object_create_error(string message);
 
         private Value m_value;
 		protected internal UIntPtr Ptr => m_value.AsPtr();
@@ -39,6 +40,12 @@ namespace LibJS
                 throw new PropertyUndefinedException(name);
 
             return value;
+        }
+
+        public static Object Create(Exception exception) 
+        {
+            var value = new Value(js_object_create_error($"{exception.GetType().FullName}: {exception.Message}"));
+            return new Object(value);
         }
     }
 }

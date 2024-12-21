@@ -8,6 +8,7 @@ var timers = LibJS.Intrinsics.Timers.Create(document);
 
 document.DefineFunction("custom", (doc, args) =>
 {
+    throw new Exception("Test Exception");
     Console.WriteLine("custom function:\t" + string.Join(" ", args.Select(a => a.ToString())));
 });
 
