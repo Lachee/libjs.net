@@ -42,6 +42,6 @@ AK::String ExternError::stack_string(JS::CompactTraceback compact) const
 {
     auto base_stack = Base::stack_string(compact);
     if (!m_stack_trace.is_empty())
-        return MUST(AK::String::formatted("{}{}", m_stack_trace, base_stack));
+        return MUST(AK::String::formatted("{}\n{}", m_stack_trace, base_stack));
     return base_stack;
 }
