@@ -1,7 +1,17 @@
 #!/bin/bash
 git submodule update --init
-# patch.bat apply
-mkdir Build
+
+# Apply all patches from patches/ directory to ladybird/
+if [ -d "patches" ]; then
+    for patch in patches/*.patch; do
+        if [ -f "$patch" ]; then
+            echo "Applying patch: $patch"
+            patch -p1 -d ladybird/ < "$patch"
+        fi
+    done
+fi
+
+mkdir -p Build
 cp -r ladybird/Toolchain Toolchain
 
 determine_python_version() {
