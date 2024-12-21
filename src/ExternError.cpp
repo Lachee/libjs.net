@@ -30,7 +30,6 @@ GC::Ref<ExternError> ExternError::create(JS::Realm& realm, StringView message, S
 {
     auto error = create(realm, MUST(String::from_utf8(message)));
     error->m_stack_trace = MUST(String::from_utf8(stack_trace));
-    dbgln("ExternError::create: stack_trace={}, m_stack_trace={}", stack_trace, error->m_stack_trace);
     return error;
 }
 
@@ -42,7 +41,6 @@ ExternError::ExternError(Object& prototype)
 AK::String ExternError::stack_string(JS::CompactTraceback compact) const
 {
     auto base_stack = Base::stack_string(compact);
-    dbgln("ExternError::stack_string: stack_trace={}", m_stack_trace);
     if (!m_stack_trace.is_empty())
         return MUST(AK::String::formatted("{}{}", m_stack_trace, base_stack));
     return base_stack;
