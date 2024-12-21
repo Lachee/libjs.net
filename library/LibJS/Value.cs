@@ -17,21 +17,28 @@ namespace LibJS
 		[DllImport(Consts.LibraryName)] static extern bool js_value_is_regexp(ulong value);
 		[DllImport(Consts.LibraryName)] static extern ulong js_value_invoke(ulong value);
 
+		public static Value Undefined => new Value(Tags.UNDEFINED_TAG, 0UL);
+		public static Value Null => new Value(Tags.NULL_TAG, 0UL);
+		public static Value NaN => new Value((-(float)(((float)(1e+300 * 1e+300)) * 0.0F)));
+		public static Value Infinity => new Value(((float)(1e+300 * 1e+300)));
+		public static Value NegativeInfinity => new Value(-((float)(1e+300 * 1e+300)));
+
 		[FieldOffset(0)]
 		private double m_double;
 
 		[FieldOffset(0)]
 		private ulong m_encoded;
+		public ulong Encoded => m_encoded;
 
-		public ulong Payload
+		private ulong Payload
 		{
 			get => m_encoded & 0xFFFFFFFFFFFF; // Mask for 48 bits
 			set => m_encoded = (m_encoded & ~0xFFFFFFFFFFFFUL) | (value & 0xFFFFFFFFFFFF);
 		}
-		public ulong Tag
+		private ulong Tag
 		{
-			get => (m_encoded >> 48) & 0xFFFF; // Shift and mask for 16 bits
-			set => m_encoded = (m_encoded & ~(0xFFFFUL << 48)) | ((value & 0xFFFF) << 48);
+			get => (m_encoded >> Tags.TAG_SHIFT) & 0xFFFF; // Shift and mask for 16 bits
+			set => m_encoded = (m_encoded & ~(0xFFFFUL << Tags.TAG_SHIFT)) | ((value & 0xFFFF) << Tags.TAG_SHIFT);
 		}
 
 		public bool IsObject => Tag == Tags.OBJECT_TAG;
@@ -75,6 +82,10 @@ namespace LibJS
 			m_double = value;
 		}
 
+		internal Value(ulong tag, ulong payload) 
+			: this((tag << Tags.TAG_SHIFT) | payload)
+		{
+		}
 
 		/// <summary>Gets the value as a double</summary>
 		/// <returns></returns>
@@ -112,7 +123,13 @@ namespace LibJS
 			return new Value(result);
 		}
 
-		public override string ToString()
+		public static Value Create(double value) => new Value(value);
+        public static Value Create(int value) => new Value() {
+			Tag = Tags.INT32_TAG,
+			Payload = (ulong)value
+		};
+
+        public override string ToString()
 		{
 			if (IsInt32)
 				return AsInt().ToString();

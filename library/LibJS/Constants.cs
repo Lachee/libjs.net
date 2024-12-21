@@ -12,6 +12,7 @@ namespace LibJS
     /// <remarks>Based of the values within Ladybird</remarks>
     internal static class Tags
     {
+        public const int TAG_SHIFT = 48;
         public const ulong CANON_NAN_BITS = 0x7FF8000000000000;
         public const ulong POSITIVE_INFINITY_BITS = 0x7FF0000000000000;
         public const ulong NEGATIVE_INFINITY_BITS = 0xFFF0000000000000;

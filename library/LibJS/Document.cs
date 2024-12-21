@@ -4,7 +4,8 @@ using System.Text;
 
 namespace LibJS
 {
-    public delegate void NativeFunction(Document environment, Array args);
+    public delegate Value NativeFunc(Document document, Array arguments);
+    public delegate void NativeAction(Document document, Array arguments);
     public class Document : Object
     {
         // [DllImport(LIB)] static extern IntPtr create_environment();
@@ -13,9 +14,9 @@ namespace LibJS
         // [DllImport(LIB)] static extern void run(IntPtr environment, string source);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, IntPtr buff, int buffSize);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void FunctionCallback(IntPtr args_ptr);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate ulong FunctionCallback(IntPtr args_ptr);
 
-        [DllImport(Consts.LibraryName)] static extern IntPtr document_create();
+		[DllImport(Consts.LibraryName)] static extern IntPtr document_create();
         [DllImport(Consts.LibraryName)] static extern ulong document_evaluate(IntPtr document, string source, string source_name);
         [DllImport(Consts.LibraryName)] static extern void document_set_on_console_log(IntPtr document, IntPtr callback);
         [DllImport(Consts.LibraryName)] static extern void document_define_function(IntPtr document, string name, IntPtr callback);
@@ -35,11 +36,41 @@ namespace LibJS
             document_set_on_console_log(m_ptr, Marshal.GetFunctionPointerForDelegate(onLogCallback));
         }
 
-        public void DefineFunction(string name, NativeFunction func)
+
+		public void DefineFunction(string name, NativeAction func)
+        {
+			var action = new FunctionCallback((argPtr) =>
+			{
+                try
+                {
+                    func(this, new Array(argPtr));
+					return Value.Undefined.Encoded;
+				} 
+                catch(Exception e)
+                {
+                    // TODO: Give the error back to JS land
+                    Console.WriteLine("Function threw a {0}: {1}\n{2}", e.GetType().Name, e.Message, e.StackTrace);
+					return Value.Undefined.Encoded;
+				}
+			});
+			document_define_function(m_ptr, name, Marshal.GetFunctionPointerForDelegate(action));
+		}
+
+		public void DefineFunction(string name, NativeFunc func)
         {
             var action = new FunctionCallback((argPtr) =>
             {
-                func(this, new Array(argPtr));
+				try
+				{
+					var value = func(this, new Array(argPtr));
+					return value.Encoded;
+				}
+				catch (Exception e)
+				{
+					// TODO: Give the error back to JS land
+                     Console.WriteLine("Function threw a {0}: {1}\n{2}", e.GetType().Name, e.Message, e.StackTrace);
+                    return Value.Undefined.Encoded;
+				}
             });
             document_define_function(m_ptr, name, Marshal.GetFunctionPointerForDelegate(action));
         }

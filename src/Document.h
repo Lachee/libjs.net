@@ -50,5 +50,5 @@ extern "C" {
 
     EncodedValue document_evaluate(Document* document, const char* source, const char* source_name);
     void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*, int));
-    void document_define_function(Document* document, const char* name, void (*function)(JS::Array&));
+    void document_define_function(Document* document, const char* name, EncodedValue(*function)(JS::Array&));
 }
