@@ -213,7 +213,10 @@ extern "C" {
             JS::Value arguments_value = JS::Value(arguments);
             EncodedValue encodedResult = function(encode_js_value(arguments_value));
             auto value = decode_js_value(encodedResult);
-            if (value.is_error()) {
+
+            // ExternErrors throw
+            if (value.is_object() && is<ExternError>(value.as_object())) {
+
                 auto& error = static_cast<ExternError const&>(value.as_object());
                 return JS::Completion{ JS::Completion::Type::Throw, value };
             }

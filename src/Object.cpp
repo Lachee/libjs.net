@@ -11,11 +11,11 @@
 
 extern "C" {
 
-    EncodedValue js_object_create_error(const char* message)
+    EncodedValue js_object_create_error(const char* message, const char* stack_trace)
     {
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();
-        auto error = ExternError::create(*realm, StringView{ message, strlen(message) });
+        auto error = ExternError::create(*realm, StringView{ message, strlen(message) }, StringView{ stack_trace, strlen(stack_trace) });
         return encode_js_value(error);
     }
 

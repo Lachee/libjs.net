@@ -1,0 +1,13 @@
+diff --git a/Libraries/LibJS/Runtime/Error.h b/Libraries/LibJS/Runtime/Error.h
+index e28868f947..863aec86c6 100644
+--- a/Libraries/LibJS/Runtime/Error.h
++++ b/Libraries/LibJS/Runtime/Error.h
+@@ -38,7 +38,7 @@ public:
+ 
+     virtual ~Error() override = default;
+ 
+-    [[nodiscard]] String stack_string(CompactTraceback compact = CompactTraceback::No) const;
++    [[nodiscard]] virtual String stack_string(CompactTraceback compact = CompactTraceback::No) const;
+ 
+     ThrowCompletionOr<void> install_error_cause(Value options);
+ 

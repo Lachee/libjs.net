@@ -2,6 +2,9 @@
 #include "Forward.h"
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibJS/SourceRange.h>
+#include <LibJS/Runtime/ExecutionContext.h>
+#include <AK/String.h>
 
 GC_DEFINE_ALLOCATOR(ExternError);
 GC::Ref<ExternError> ExternError::create(JS::Realm& realm)
@@ -23,8 +26,24 @@ GC::Ref<ExternError> ExternError::create(JS::Realm& realm, StringView message)
     return create(realm, MUST(String::from_utf8(message)));
 }
 
+GC::Ref<ExternError> ExternError::create(JS::Realm& realm, StringView message, StringView stack_trace)
+{
+    auto error = create(realm, MUST(String::from_utf8(message)));
+    error->m_stack_trace = MUST(String::from_utf8(stack_trace));
+    dbgln("ExternError::create: stack_trace={}, m_stack_trace={}", stack_trace, error->m_stack_trace);
+    return error;
+}
+
 ExternError::ExternError(Object& prototype)
     : Error(prototype)
 {
 }
 
+AK::String ExternError::stack_string(JS::CompactTraceback compact) const
+{
+    auto base_stack = Base::stack_string(compact);
+    dbgln("ExternError::stack_string: stack_trace={}", m_stack_trace);
+    if (!m_stack_trace.is_empty())
+        return MUST(AK::String::formatted("{}{}", m_stack_trace, base_stack));
+    return base_stack;
+}
