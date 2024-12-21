@@ -70,29 +70,6 @@ extern "C" {
         return result.value();
     }
 
-    EncodedValue js_object_get_property_value_at_index(JS::Object* object, int index)
-    {
-        JS::PropertyKey key(index);
-        auto result = object->get(key);
-        if (result.is_error()) {
-            warnln("Error getting property with index");
-            return JS::js_undefined().encoded();
-        }
-        return encode_js_value(result.value());
-    }
-
-    EncodedValue js_object_get_property_value(JS::Object* object, const char* name)
-    {
-        DeprecatedFlyString keyName(name);
-        JS::PropertyKey key(keyName);
-        auto result = object->get(key);
-        if (result.is_error()) {
-            warnln("Error getting property with name");
-            return JS::js_undefined().encoded();
-        }
-        return encode_js_value(result.value());
-    }
-
     EncodedValue js_value_invoke(EncodedValue encoded)
     {
         auto value = decode_js_value(encoded);

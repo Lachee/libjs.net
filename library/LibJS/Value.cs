@@ -113,6 +113,20 @@ namespace LibJS
 			return (m_encoded & 0x1) != 0;
 		}
 
+		/// <summary>Gets the underlying pointer of the object</summary>
+		/// <returns></returns>
+		internal UIntPtr AsPtr() 
+		{
+			Debug.Assert(IsObject);
+			if (System.Environment.Is64BitProcess) 
+			{
+				return new UIntPtr((m_encoded << 16) >> 16);	
+			} 
+			else 
+			{
+				return new UIntPtr(m_encoded & 0xffff_ffff);
+			}
+		}
 
 		/// <summary>Invokes the value as a function</summary>
 		public Value Invoke()

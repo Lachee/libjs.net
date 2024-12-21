@@ -189,7 +189,7 @@ extern "C" {
         document->set_on_console_log(Function<void(JS::Console::LogLevel, const char*, int)>(on_console_log));
     }
 
-    void document_define_function(Document* document, const char* name, EncodedValue(*function)(JS::Array&)) {
+    void document_define_function(Document* document, const char* name, EncodedValue(*function)(EncodedValue)) {
         auto window = document->window();
         auto& realm = window->realm();
 
@@ -205,7 +205,13 @@ extern "C" {
                 arguments->indexed_properties().append(argument);
             }
 
-            EncodedValue encodedResult = function(*arguments);
+            JS::Value arguments_value = JS::Value(arguments);
+            EncodedValue encodedResult = function(encode_js_value(arguments_value));
+            auto value = decode_js_value(encodedResult);
+            if (value.is_error()) {
+                return throw_completion(value);
+            }
+
             return decode_js_value(encodedResult);
             });
 

@@ -18,9 +18,7 @@ namespace LibJS {
             set => throw new NotImplementedException();
         }
 
-        internal Array(nint ptr) : base(ptr)
-        {
-        }
+        internal Array(Value value) : base(value) { }
 
         /// <summary>
         /// Gets the number of elements in the array

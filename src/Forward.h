@@ -16,6 +16,7 @@ using EncodedValue = u64;
 
 class Document;
 class EnvironmentSettingsObject;
+class ExternError;
 class GameWindow;
 class InteropValue;
 class LogClient;

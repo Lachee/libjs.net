@@ -120,11 +120,11 @@ namespace LibJS.Intrinsics
 			if (args.Count != 1)
 				throw new ArgumentException("SetTimeout expects 1 argument");
 
-			var callback = args[0];
-			if (!callback.IsInt32)
+			var callbackId = args[0];
+			if (!callbackId.IsInt32)
 				throw new ArgumentException("First argument must be a callback id.");
 
-			m_timers.Remove(callback.AsInt());
+			m_timers.Remove(callbackId.AsInt());
 		}
 	
 	}
