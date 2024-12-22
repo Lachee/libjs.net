@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,11 +10,11 @@ namespace LibJS
 	public struct Value
 	{
 		[DllImport(Consts.LibraryName)] static extern int js_value_to_string(ulong value, byte[] strBuff, int strBuffSize);
-		[DllImport(Consts.LibraryName)] static extern bool js_value_is_function(ulong value);
-		[DllImport(Consts.LibraryName)] static extern bool js_value_is_constructor(ulong value);
-		[DllImport(Consts.LibraryName)] static extern bool js_value_is_error(ulong value);
-		[DllImport(Consts.LibraryName)] static extern bool js_value_is_array(ulong value);
-		[DllImport(Consts.LibraryName)] static extern bool js_value_is_regexp(ulong value);
+		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_function(ulong value);
+		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_constructor(ulong value);
+		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_error(ulong value);
+		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_array(ulong value);
+		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_regexp(ulong value);
 		[DllImport(Consts.LibraryName)] static extern ulong js_value_invoke(ulong value);
 
 		public static Value Undefined => new Value(Tags.UNDEFINED_TAG, 0UL);
