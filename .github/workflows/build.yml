@@ -42,20 +42,8 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_URL', process.env.ACTIONS_RUNTIME_URL || '');
 
       - name: Install LLVM/Clang
-        shell: pwsh
-        run: .github/install-llvm.ps1 "C:/Program Files/LLVM"
-        #shell: cmd
-        #run: choco install llvm -y --version 19.1.5 
-
-      - name: Verify LLVM/Clang Installation
         shell: cmd
-        run: |
-          where clang-cl.exe
-          clang-cl --version
-          ls -al "C:/Program Files/LLVM"
-          ls -al "C:/Program Files/LLVM/lib"
-          ls -al "C:/Program Files/LLVM/lib/cmake"
-          ls -al "C:/Program Files/LLVM/lib/cmake/clang"
+        run: Powershell.exe -File  .github/install-llvm.ps1
 
       - name: Install Ninja
         shell: cmd
@@ -63,6 +51,18 @@ jobs:
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Verify LLVM/Clang, Ninja, and MSBuild Installation
+        shell: cmd
+        run: |
+          where clang-cl.exe
+          clang-cl --version
+          
+          where ninja.exe
+          ninja --version
+
+          where MSHBuild.exe
+          MSBuild.exe --version
 
       - name: Initialize
         shell: cmd
