@@ -52,12 +52,15 @@ extern "C" {
 
     bool js_value_is_array(EncodedValue encoded)
     {
+        warnln("Checking if encoded is array: {}", encoded);
         auto result = decode_js_value(encoded).is_array(main_thread_vm());
         if (result.is_error()) {
             warnln("Error checking if value is array");
             return false;
         }
-        return result.value();
+        bool is_array = result.value();
+        warnln("return is_array = {}", is_array ? "TRUE" : "FALSE");
+        return is_array;
     }
 
     bool js_value_is_regexp(EncodedValue encoded)
@@ -68,6 +71,14 @@ extern "C" {
             return false;
         }
         return result.value();
+    }
+
+    bool js_value_is_promise(EncodedValue encoded)
+    {
+        auto value = decode_js_value(encoded);
+        if (value.is_object() && is<JS::Promise>(value.as_object()))
+            return true;
+        return false;
     }
 
     EncodedValue js_value_invoke(EncodedValue encoded)

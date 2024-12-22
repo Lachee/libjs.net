@@ -12,5 +12,5 @@ extern "C" {
     EncodedValue js_object_create_error(const char* message, const char* stack_trace);
     EncodedValue js_object_get_property_value_at_index(EncodedValue object, int index);
     EncodedValue js_object_get_property_value(EncodedValue object, const char* name);
-
+    void js_object_then(EncodedValue encoded, void (*then)(EncodedValue));
 }

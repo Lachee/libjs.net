@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,6 +15,7 @@ namespace LibJS
 		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_error(ulong value);
 		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_array(ulong value);
 		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_regexp(ulong value);
+		[DllImport(Consts.LibraryName)][return:MarshalAs(UnmanagedType.I1)] static extern bool js_value_is_promise(ulong value);
 		[DllImport(Consts.LibraryName)] static extern ulong js_value_invoke(ulong value);
 
 		public static Value Undefined => new Value(Tags.UNDEFINED_TAG, 0UL);
@@ -70,6 +71,9 @@ namespace LibJS
 		public bool IsArray => IsObject && js_value_is_array(m_encoded);
 		public bool IsRegexp => IsObject && js_value_is_regexp(m_encoded);
 
+		// Non-LibJS 
+		public bool IsPromise => IsObject && js_value_is_promise(m_encoded);
+
 		internal Value(ulong encoded)
 		{
 			m_double = 0;
@@ -111,6 +115,12 @@ namespace LibJS
 		{
 			Debug.Assert(IsBoolean);
 			return (m_encoded & 0x1) != 0;
+		}
+
+		public Promise AsPromise() 
+		{
+			Debug.Assert(IsPromise);
+			return new Promise(this);
 		}
 
 		/// <summary>Gets the underlying pointer of the object</summary>

@@ -15,25 +15,20 @@ document.DefineFunction("custom", (doc, args) =>
 var result = document.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
-    const c = a + b;
-    console.trace('a + b = c', { a, b, c });
-    custom(a, b, c);
-
-    const intervalId = setInterval(() => {
-        console.log('Hello from an interval!');
-	}, 1_000);
-
-    console.log('interval id:', intervalId);
-
-    setTimeout(() => {
-        console.log('Hello from a delayed call! Cancelling interval.');
-        clearInterval(intervalId);
-    }, 3_000);
+    
+    new Promise((resolve, reject) => {
+        setTimeout(() => {
+            console.log('Resolving Promise');
+			resolve();
+		}, 1000);
+    });
 ");
 Console.WriteLine("Result: {0}", result);
 
 // This still throws the same issue.
 Console.WriteLine("==========");
+Console.WriteLine("Waiting Promise...");
+result.AsPromise().Then().Wait();
 
 Console.WriteLine("Waiting Pending...");
 timers.WaitPending().Wait();
