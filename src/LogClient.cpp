@@ -1,6 +1,7 @@
 #include "Forward.h"
 #include "LogClient.h"
 #include "MainThreadVM.h"
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibGC/Cell.h>
 #include <LibJS/Console.h>
@@ -25,52 +26,51 @@ JS::ThrowCompletionOr<JS::Value> LogClient::printer(JS::Console::LogLevel log_le
 {
     auto& g_vm = main_thread_vm();
     auto indent = MUST(String::repeated(' ', m_group_stack_depth * 2));
+    StringBuilder builder;
 
-    if (log_level == JS::Console::LogLevel::Trace) {
+    if (log_level == JS::Console::LogLevel::Trace)
+    {
         auto trace = arguments.get<JS::Console::Trace>();
-        StringBuilder builder;
         if (!trace.label.is_empty())
             builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label);
 
         for (auto& function_name : trace.stack)
             builder.appendff("{}-> {}\n", indent, function_name);
-
-        outln("{}", builder.string_view());
-        return JS::js_undefined();
     }
-
-    if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
+    else if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
         auto group = arguments.get<JS::Console::Group>();
-        outln("{}\033[36;1m{}\033[0m", indent, group.label);
+        builder.appendff("{}\033[36;1m{}\033[0m", indent, group.label);
         m_group_stack_depth++;
-        return JS::js_undefined();
+    }
+    else
+    {
+        auto output = TRY(generically_format_values(arguments.get<GC::MarkedVector<JS::Value>>()));
+        switch (log_level) {
+        case JS::Console::LogLevel::Debug:
+            builder.appendff("{}\033[36;1m{}\033[0m", indent, output);
+            break;
+        case JS::Console::LogLevel::Error:
+        case JS::Console::LogLevel::Assert:
+            builder.appendff("{}\033[31;1m{}\033[0m", indent, output);
+            break;
+        case JS::Console::LogLevel::Info:
+            builder.appendff("{}(i) {}", indent, output);
+            break;
+        case JS::Console::LogLevel::Log:
+            builder.appendff("{}{}", indent, output);
+            break;
+        case JS::Console::LogLevel::Warn:
+        case JS::Console::LogLevel::CountReset:
+            builder.appendff("{}\033[33;1m{}\033[0m", indent, output);
+            break;
+        default:
+            builder.appendff("{}{}", indent, output);
+            break;
+        }
     }
 
-    auto output = TRY(generically_format_values(arguments.get<GC::MarkedVector<JS::Value>>()));
-    if (environment()->log(log_level, output))
-        return JS::js_undefined();
-
-    switch (log_level) {
-    case JS::Console::LogLevel::Debug:
-        outln("{}\033[36;1m{}\033[0m", indent, output);
-        break;
-    case JS::Console::LogLevel::Error:
-    case JS::Console::LogLevel::Assert:
-        outln("{}\033[31;1m{}\033[0m", indent, output);
-        break;
-    case JS::Console::LogLevel::Info:
-        outln("{}(i) {}", indent, output);
-        break;
-    case JS::Console::LogLevel::Log:
-        outln("{}{}", indent, output);
-        break;
-    case JS::Console::LogLevel::Warn:
-    case JS::Console::LogLevel::CountReset:
-        outln("{}\033[33;1m{}\033[0m", indent, output);
-        break;
-    default:
-        outln("{}{}", indent, output);
-        break;
+    if (!environment()->log(log_level, builder.string_view())) {
+        outln("{}", builder.string_view());
     }
 
     return JS::js_undefined();

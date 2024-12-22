@@ -16,6 +16,7 @@ var result = document.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
     const c = a + b;
+    console.trace('a + b = c', { a, b, c });
     custom(a, b, c);
 
     const intervalId = setInterval(() => {

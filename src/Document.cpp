@@ -91,7 +91,6 @@ bool Document::log(JS::Console::LogLevel log_level, StringView content)
 {
     if (m_on_console_log_ptr)
     {
-
         m_on_console_log_ptr(log_level, content.characters_without_null_termination(), content.length());
         return true;
     }
