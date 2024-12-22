@@ -42,8 +42,8 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_URL', process.env.ACTIONS_RUNTIME_URL || '');
 
       - name: Install LLVM/Clang
-        shell: cmd
-        run: Powershell.exe -File  .github/install-llvm.ps1
+        shell: pwsh
+        run: .github/install-llvm.ps1 "C:/Program Files/LLVM"
 
       - name: Install Ninja
         shell: cmd
