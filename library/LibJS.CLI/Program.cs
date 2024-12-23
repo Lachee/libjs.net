@@ -1,6 +1,6 @@
-﻿#if DEBUG
-using LibJS.Types;
+﻿using LibJS.Types;
 
+#if DEBUG
 static void CopyLibraries()
 {
 	string sourcePath = Path.Combine("..", "..", "..", "..", "..", "Build", "release");

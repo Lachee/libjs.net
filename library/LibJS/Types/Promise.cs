@@ -8,10 +8,17 @@ using System.Threading.Tasks;
 
 namespace LibJS.Types
 {
+    public static class PromiseExtension
+	{
+		public static Promise AsPromise(this Value value) => new Promise(value);
+        public static Promise AsPromise(this Task value) => Promise.Create(value);
+        public static Promise AsPromise(this Task<Value> value) => Promise.Create(value);
+	}
+    
     public class Promise : Object
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void PromiseCallback(ulong value);
-        [DllImport(Consts.LibraryName)] private static extern void js_object_promise_invoke_on_complete(ulong value, IntPtr then);
+        [DllImport(Consts.LibraryName)] private static extern void js_object_promise_invoke_on_complete(Value value, IntPtr then);
         [DllImport(Consts.LibraryName)] private static extern Value js_object_promise_create(out Value resolve, out Value reject);
         [DllImport(Consts.LibraryName)] private static extern void run_queued_promise_jobs();
 
@@ -25,12 +32,8 @@ namespace LibJS.Types
         public Task<Value> AsTask()
         {
             var tcs = new TaskCompletionSource<Value>();
-            PromiseCallback callback = new PromiseCallback((value) =>
-            {
-                Console.WriteLine("Resolved: {0}", value);
-                tcs.SetResult(new Value(value));
-            });
-            js_object_promise_invoke_on_complete(Value.Encoded, Marshal.GetFunctionPointerForDelegate(callback));
+            PromiseCallback callback = new PromiseCallback((value) => tcs.SetResult(new Value(value)));
+            js_object_promise_invoke_on_complete(value, Marshal.GetFunctionPointerForDelegate(callback));
             return tcs.Task;
         }
 
@@ -58,6 +61,8 @@ namespace LibJS.Types
 				}
 			});
             return new Promise(promise);
-        }
-    }
+		}
+
+	}
+
 }
