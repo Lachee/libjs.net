@@ -18,7 +18,6 @@ extern "C" {
 
     EncodedValue js_array_create(EncodedValue* values, size_t length)
     {
-        VERIFY(length >= 0);
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();
         auto array = MUST(JS::Array::create(*realm, length));
@@ -65,7 +64,6 @@ extern "C" {
         auto value = decode_js_value(func);
         VERIFY(value.is_function());
 
-        VERIFY(length >= 0);
         AK::Span<JS::Value> args{ reinterpret_cast<JS::Value*>(arguments), length };
 
         auto& function_object = value.as_function();
