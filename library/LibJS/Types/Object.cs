@@ -7,13 +7,14 @@ namespace LibJS.Types
 {
     public class Object
     {
-        [DllImport(Consts.LibraryName)] protected static extern ulong js_object_get_property_value_at_index(ulong value, int index);
-        [DllImport(Consts.LibraryName)] protected static extern ulong js_object_get_property_value(ulong value, string name);
-        [DllImport(Consts.LibraryName)] private static extern ulong js_object_create_error(string message, string stackTrace);
+        [DllImport(Consts.LibraryName)] protected static extern Value js_object_get_property_value_at_index(Value value, int index);
+        [DllImport(Consts.LibraryName)] protected static extern Value js_object_get_property_value(Value value, string name);
+        [DllImport(Consts.LibraryName)] private static extern Value js_object_create_error(string message, string stackTrace);
 
         protected Value value;
         public Value Value => value;
 
+        [System.Obsolete]
         protected internal nuint Ptr
         {
             get
@@ -24,7 +25,6 @@ namespace LibJS.Types
             }
         }
 
-        internal Object(ulong encoded) : this(new Value(encoded)) { }
         internal Object(Value value)
         {
             if (!value.IsObject)
@@ -32,14 +32,16 @@ namespace LibJS.Types
             this.value = value;
         }
 
-        [Obsolete("Use Value to wrap pointers")]
+		internal Object(ulong encoded)
+			: this(new Value(encoded)) { }
+
+		[Obsolete("Use Value to wrap pointers")]
         internal Object(nuint ptr)
             : this(new Value(Tags.OBJECT_TAG, ptr.ToUInt64())) { }
 
         public Value GetProperty(int index)
         {
-            var property = js_object_get_property_value_at_index(this.value.Encoded, index);
-            var value = new Value(property);
+            var value = js_object_get_property_value_at_index(this.value, index);
             if (value.IsUndefined)
                 throw new IndexUndefinedException(index);
 
@@ -48,15 +50,14 @@ namespace LibJS.Types
 
         public Value GetProperty(string name)
         {
-            var property = js_object_get_property_value(this.value.Encoded, name);
-            var value = new Value(property);
+            var value = js_object_get_property_value(this.value, name);
             if (value.IsUndefined)
                 throw new PropertyUndefinedException(name);
 
             return value;
         }
 
-        public static Object Create(Exception exception)
+        public static Object CreateError(Exception exception)
         {
             var message = $"{exception.GetType().FullName}: {exception.Message}";
             var stackTrace = "";
@@ -65,7 +66,7 @@ namespace LibJS.Types
             if (exception.StackTrace != null)
                 stackTrace = StackTraceToJS(exception.StackTrace, true).TrimEnd();
 
-            var value = new Value(js_object_create_error(message, stackTrace.ToString()));
+            var value = js_object_create_error(message, stackTrace.ToString());
             return new Object(value);
         }
 

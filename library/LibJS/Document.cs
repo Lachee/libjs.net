@@ -48,7 +48,7 @@ namespace LibJS
                 }
                 catch (System.Exception e)
                 {
-                    return Create(e).Value.Encoded;
+                    return CreateError(e).Value.Encoded;
                 }
             });
             document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));
@@ -65,7 +65,7 @@ namespace LibJS
                 }
                 catch (System.Exception e)
                 {
-                    return Create(e).Value.Encoded;
+                    return CreateError(e).Value.Encoded;
                 }
             });
             document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));
