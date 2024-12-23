@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using LibJS.Types;
 
 namespace LibJS
 {
@@ -13,15 +13,15 @@ namespace LibJS
         // [DllImport(LIB)] static extern void set_invoke(UIntPtr environment, UIntPtr function);
         // [DllImport(LIB)] static extern void run(UIntPtr environment, string source);
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, IntPtr buff, int buffSize);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void OnLogCallback(int level, nint buff, int buffSize);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate ulong FunctionCallback(ulong args);
 
-		[DllImport(Consts.LibraryName)] static extern UIntPtr document_create();
-        [DllImport(Consts.LibraryName)] static extern ulong document_evaluate(UIntPtr document, string source, string source_name);
-        [DllImport(Consts.LibraryName)] static extern void document_set_on_console_log(UIntPtr document, IntPtr callback);
-        [DllImport(Consts.LibraryName)] static extern void document_define_function(UIntPtr document, string name, IntPtr callback);
+        [DllImport(Consts.LibraryName)] static extern nuint document_create();
+        [DllImport(Consts.LibraryName)] static extern ulong document_evaluate(nuint document, string source, string source_name);
+        [DllImport(Consts.LibraryName)] static extern void document_set_on_console_log(nuint document, nint callback);
+        [DllImport(Consts.LibraryName)] static extern void document_define_function(nuint document, string name, nint callback);
 
-        public event Action<LogLevel, string>? OnLog;
+        public event System.Action<LogLevel, string>? OnLog;
 
         public Document()
             : base(document_create())
@@ -37,36 +37,36 @@ namespace LibJS
         }
 
 
-		public void DefineFunction(string name, NativeAction func)
-        {
-			var action = new FunctionCallback((args) =>
-			{
-                try
-                {
-                    func(this, new Array(new Value(args)));
-					return Value.Undefined.Encoded;
-				} 
-                catch(Exception e)
-                {
-					return Object.Create(e).Value.Encoded;
-				}
-			});
-			document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));
-		}
-
-		public void DefineFunction(string name, NativeFunc func)
+        public void DefineFunction(string name, NativeAction func)
         {
             var action = new FunctionCallback((args) =>
             {
-				try
-				{
-					var value = func(this, new Array(new Value(args)));
-					return value.Encoded;
-				}
-				catch (Exception e)
-				{
-                    return Object.Create(e).Value.Encoded;
-				}
+                try
+                {
+                    func(this, new Array(new Value(args)));
+                    return Value.Undefined.Encoded;
+                }
+                catch (System.Exception e)
+                {
+                    return Create(e).Value.Encoded;
+                }
+            });
+            document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));
+        }
+
+        public void DefineFunction(string name, NativeFunc func)
+        {
+            var action = new FunctionCallback((args) =>
+            {
+                try
+                {
+                    var value = func(this, new Array(new Value(args)));
+                    return value.Encoded;
+                }
+                catch (System.Exception e)
+                {
+                    return Create(e).Value.Encoded;
+                }
             });
             document_define_function(Ptr, name, Marshal.GetFunctionPointerForDelegate(action));
         }
@@ -79,7 +79,7 @@ namespace LibJS
 
         public void Dispose()
         {
-            throw new NotSupportedException("Document cannot be disposed");
+            throw new System.NotSupportedException("Document cannot be disposed");
         }
     }
 }

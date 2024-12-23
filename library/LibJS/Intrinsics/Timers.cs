@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using LibJS.Types;
 
 namespace LibJS.Intrinsics
 {
-	public class Timers : IIntrinsic
+    public class Timers : IIntrinsic
 	{
 		private int m_lastTimerId = 1;
 		private Dictionary<int, Task> m_timers;
@@ -57,7 +59,7 @@ namespace LibJS.Intrinsics
 			m_timers.Clear();
 		}
 
-		private Value SetTimeout(Document doc, Array args) 
+		private Value SetTimeout(Document doc, Types.Array args) 
 		{
 			if (args.Count != 2)
 				throw new ArgumentException("SetTimeout expects 2 arguments");
@@ -75,14 +77,14 @@ namespace LibJS.Intrinsics
 			{
 				await Task.Delay((int)Math.Max(Math.Floor(milliseconds.AsDouble()), 1));
 				if (m_timers.Remove(id)) {
-					callback.Invoke();
+					callback.AsObject<Function>().Invoke();
 				}
 			}));
 
 			return Value.Create(id);
 		}
 
-		private Value SetInterval(Document doc, Array args)
+		private Value SetInterval(Document doc, Types.Array args)
 		{
 			if (args.Count != 2)
 				throw new ArgumentException("SetTimeout expects 2 arguments");
@@ -103,7 +105,7 @@ namespace LibJS.Intrinsics
 					await Task.Delay((int)Math.Max(Math.Floor(milliseconds.AsDouble()), 1));
 					if (m_timers.ContainsKey(id))
 					{
-						callback.Invoke();
+						callback.AsObject<Function>().Invoke();
 					}
 					else
 					{
@@ -115,7 +117,7 @@ namespace LibJS.Intrinsics
 			return Value.Create(id);
 		}
 
-		private void ClearTimeout(Document doc, Array args)
+		private void ClearTimeout(Document doc, Types.Array args)
 		{
 			if (args.Count != 1)
 				throw new ArgumentException("SetTimeout expects 1 argument");

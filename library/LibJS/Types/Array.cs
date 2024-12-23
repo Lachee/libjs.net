@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
-namespace LibJS {
+namespace LibJS.Types
+{
     public sealed class Array : Object, IEnumerable<Value>, IList<Value>
     {
         private const string LengthName = "length";
@@ -9,8 +12,10 @@ namespace LibJS {
 
         public int Count => GetCount();
 
-        public Value this[int index] {
-            get  {
+        public Value this[int index]
+        {
+            get
+            {
                 if (index < 0 || index >= Count)
                     throw new IndexOutOfRangeException();
                 return GetProperty(index);
@@ -18,13 +23,17 @@ namespace LibJS {
             set => throw new NotImplementedException();
         }
 
-        internal Array(Value value) : base(value) { }
+        internal Array(Value value) : base(value) {
+            if (!value.IsArray)
+                throw new InvalidTypeException("array");
+        }
 
         /// <summary>
         /// Gets the number of elements in the array
         /// </summary>
         /// <returns></returns>
-        public int GetCount() {
+        public int GetCount()
+        {
             var val = GetProperty(LengthName);
             return val.AsInt();
         }
@@ -40,7 +49,7 @@ namespace LibJS {
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         public int IndexOf(Value item)

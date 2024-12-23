@@ -1,6 +1,8 @@
-﻿namespace LibJS.Intrinsics
+﻿using System;
+
+namespace LibJS.Intrinsics
 {
-	public class Logger : IIntrinsic
+    public class Logger : IIntrinsic
 	{
 		public bool StripAnsi { get; set; } = false;
 		public bool UseColor { get; set; } = true;

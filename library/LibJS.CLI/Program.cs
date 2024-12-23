@@ -1,4 +1,26 @@
-﻿
+﻿#if DEBUG
+using LibJS.Types;
+
+static void CopyLibraries()
+{
+	string sourcePath = Path.Combine("..", "..", "..", "..", "..", "Build", "release");
+	string targetPath = AppDomain.CurrentDomain.BaseDirectory;
+
+	foreach (var file in Directory.GetFiles(sourcePath, "*.*", SearchOption.TopDirectoryOnly)
+		.Where(s => s.EndsWith(".dll") || s.EndsWith(".so")))
+	{
+		string fileName = Path.GetFileName(file);
+		string destFile = Path.Combine(targetPath, fileName);
+		Console.WriteLine($"-- copying {fileName}");
+		File.Copy(file, destFile, true);
+	}
+}
+
+
+// Call the function at the start of the Main method
+CopyLibraries();
+#endif
+
 ThreadPool.SetMaxThreads(1, 1);
 List<Task> pendingTasks = new List<Task>();
 
@@ -9,9 +31,14 @@ var timers = LibJS.Intrinsics.Timers.Create(document);
 document.DefineFunction("custom", (doc, args) =>
 {
     throw new Exception("Test Exception");
-    Console.WriteLine("custom function:\t" + string.Join(" ", args.Select(a => a.ToString())));
 });
 
+Console.WriteLine("==========");
+Console.WriteLine("Waiting constructed promise...");
+var promise = Promise.Create(Task.Delay(100));
+promise.AsTask().Wait();
+
+Console.WriteLine("==========");
 var result = document.Evaluate(@"
     const a = 0.5;
     const b = 0.1;
@@ -20,15 +47,15 @@ var result = document.Evaluate(@"
         setTimeout(() => {
             console.log('Resolving Promise');
 			resolve();
-		}, 1000);
+		}, 3000);
     });
 ");
 Console.WriteLine("Result: {0}", result);
 
 // This still throws the same issue.
 Console.WriteLine("==========");
-Console.WriteLine("Waiting Promise...");
-result.AsPromise().Then().Wait();
+Console.WriteLine("Waiting Result...");
+result.AsObject<Promise>().AsTask().Wait();
 
 Console.WriteLine("Waiting Pending...");
 timers.WaitPending().Wait();

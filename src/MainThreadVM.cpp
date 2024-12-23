@@ -60,3 +60,10 @@ NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(Function<JS::O
     // 7. Return realm execution context.
     return realm_execution_context;
 }
+
+extern "C" {
+    void run_queued_promise_jobs() {
+        auto& vm = main_thread_vm();
+        vm.run_queued_promise_jobs();
+    }
+}

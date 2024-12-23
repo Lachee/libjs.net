@@ -11,3 +11,6 @@ JS::VM& main_thread_vm();
 /** Creates a new realm */
 NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(Function<JS::Object* (JS::Realm&)> create_global_object, Function<JS::Object* (JS::Realm&)> create_global_this_value);
 
+extern "C" {
+    void run_queued_promise_jobs();
+}

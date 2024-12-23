@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibJS.Intrinsics
 {
-	internal interface IIntrinsic
+    internal interface IIntrinsic
 	{
 		/// <summary>
 		/// Registers the intrinsic to the document

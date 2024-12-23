@@ -74,7 +74,8 @@ GC::Ref<Document> Document::create_and_initialize()
     console_object.console().set_client(console_client);;
 
     // Root level execution context
-    // main_thread_vm().push_execution_context(*document->execution_context());
+    prepare_to_run_script(window->realm());
+    // main_thread_vm().push_execution_context(*move(realm_execution_context));
     return document;
 }
 
