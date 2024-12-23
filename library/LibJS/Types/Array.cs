@@ -91,10 +91,20 @@ namespace LibJS.Types
             return IndexOf(item) >= 0;
         }
 
-        public void CopyTo(Value[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
-        }
+		public void CopyTo(Value[] array, int arrayIndex)
+		{
+			if (array == null)
+				throw new ArgumentNullException(nameof(array));
+			if (arrayIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+			if (array.Length - arrayIndex < Count)
+				throw new ArgumentException("The number of elements in the source array is greater than the available space from arrayIndex to the end of the destination array.");
+
+			for (int i = 0; i < Count; i++)
+			{
+				array[arrayIndex + i] = GetProperty(i);
+			}
+		}
 
         public bool Remove(Value item)
         {
