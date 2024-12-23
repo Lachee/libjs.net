@@ -8,9 +8,15 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 
+using PromiseCallback = void (*)(EncodedValue);
+
 extern "C" {
     EncodedValue js_object_create_error(const char* message, const char* stack_trace);
     EncodedValue js_object_get_property_value_at_index(EncodedValue object, int index);
     EncodedValue js_object_get_property_value(EncodedValue object, const char* name);
-    void js_object_then(EncodedValue encoded, void (*then)(EncodedValue));
+
+    EncodedValue js_function_invoke(EncodedValue encoded);
+
+    void js_object_promise_invoke_on_complete(EncodedValue encoded, PromiseCallback then);
+    EncodedValue js_object_promise_create(EncodedValue* resolve);
 }

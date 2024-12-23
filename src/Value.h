@@ -17,6 +17,4 @@ extern "C" {
     bool js_value_is_array(EncodedValue encoded);
     bool js_value_is_regexp(EncodedValue encoded);
     bool js_value_is_promise(EncodedValue encoded);
-
-    EncodedValue js_value_invoke(EncodedValue encoded);
 }
