@@ -11,9 +11,23 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/Array.h>
 
 
 extern "C" {
+
+    EncodedValue js_array_create(EncodedValue* values, size_t length)
+    {
+        VERIFY(length >= 0);
+        auto& vm = main_thread_vm();
+        auto realm = vm.current_realm();
+        auto array = MUST(JS::Array::create(*realm, length));
+
+        for (size_t i = 0; i < length; i++)
+            array->indexed_properties().put(i, decode_js_value(values[i]));
+
+        return encode_js_value(JS::Value(array));
+    }
 
     EncodedValue js_object_create_error(const char* message, const char* stack_trace)
     {
@@ -46,10 +60,13 @@ extern "C" {
         return encode_js_value(result.value());
     }
 
-    EncodedValue js_function_invoke(EncodedValue encoded)
+    EncodedValue js_function_invoke(EncodedValue func, EncodedValue* arguments, size_t length)
     {
-        auto value = decode_js_value(encoded);
+        auto value = decode_js_value(func);
         VERIFY(value.is_function());
+
+        VERIFY(length >= 0);
+        AK::Span<JS::Value> args{ reinterpret_cast<JS::Value*>(arguments), length };
 
         auto& function_object = value.as_function();
         auto& relevant_realm = function_object.shape().realm();
@@ -58,7 +75,7 @@ extern "C" {
 
         auto this_value = JS::js_undefined();
         auto& vm = function_object.vm();
-        auto result = JS::call(vm, function_object, this_value);
+        auto result = JS::call(vm, function_object, this_value, args);
 
         clean_up_after_running_script(relevant_realm);
 
@@ -99,14 +116,16 @@ extern "C" {
         clean_up_after_running_script(realm);
     }
 
-    EncodedValue js_object_promise_create(EncodedValue* resolve)
+    EncodedValue js_object_promise_create(EncodedValue* resolve, EncodedValue* reject)
     {
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();
         auto promise = JS::Promise::create(*realm);
         auto resolvingFunctions = promise->create_resolving_functions();
         auto resolveValue = JS::Value(resolvingFunctions.resolve);
+        auto rejectValue = JS::Value(resolvingFunctions.reject);
         *resolve = encode_js_value(resolveValue);
+        *reject = encode_js_value(rejectValue);
         return encode_js_value(promise);
     }
 }

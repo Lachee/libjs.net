@@ -35,7 +35,10 @@ document.DefineFunction("custom", (doc, args) =>
 
 Console.WriteLine("==========");
 Console.WriteLine("Waiting constructed promise...");
-var promise = Promise.Create(Task.Delay(100));
+var promise = Promise.Create(Task.Run(async () => {
+	await Task.Delay(1000);
+	return Value.Create(1000);
+}));
 promise.AsTask().Wait();
 
 Console.WriteLine("==========");

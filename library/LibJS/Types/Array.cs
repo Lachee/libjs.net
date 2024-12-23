@@ -1,12 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace LibJS.Types
 {
     public sealed class Array : Object, IEnumerable<Value>, IList<Value>
     {
-        private const string LengthName = "length";
+		[DllImport(Consts.LibraryName)] private static extern Value js_array_create(Value[] values, int length);
+
+		private const string LengthName = "length";
 
         public bool IsReadOnly => true;
 
@@ -96,6 +99,12 @@ namespace LibJS.Types
         public bool Remove(Value item)
         {
             throw new NotImplementedException();
+        }
+
+		public static Array Create(params Value[] values) 
+        {
+            var value = js_array_create(values, values.Length);
+            return new Array(value);
         }
     }
 }
