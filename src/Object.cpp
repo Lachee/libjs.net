@@ -16,52 +16,52 @@
 
 extern "C" {
 
-    EncodedValue js_array_create(EncodedValue* values, size_t length)
+    Value js_array_create(Value* values, size_t length)
     {
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();
         auto array = MUST(JS::Array::create(*realm, length));
 
         for (size_t i = 0; i < length; i++)
-            array->indexed_properties().put(i, decode_js_value(values[i]));
+            array->indexed_properties().put(i, decode(values[i]));
 
-        return encode_js_value(JS::Value(array));
+        return encode(JS::Value(array));
     }
 
-    EncodedValue js_object_create_error(const char* message, const char* stack_trace)
+    Value js_object_create_error(const char* message, const char* stack_trace)
     {
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();
         auto error = ExternError::create(*realm, StringView{ message, strlen(message) }, StringView{ stack_trace, strlen(stack_trace) });
-        return encode_js_value(error);
+        return encode(error);
     }
 
-    EncodedValue js_object_get_property_value_at_index(EncodedValue object, int index)
+    Value js_object_get_property_value_at_index(Value object, int index)
     {
         JS::PropertyKey key(index);
-        auto result = decode_js_value(object).as_object().get(key);
+        auto result = decode(object).as_object().get(key);
         if (result.is_error()) {
             warnln("Error getting property with index");
             return JS::js_undefined().encoded();
         }
-        return encode_js_value(result.value());
+        return encode(result.value());
     }
 
-    EncodedValue js_object_get_property_value(EncodedValue object, const char* name)
+    Value js_object_get_property_value(Value object, const char* name)
     {
         DeprecatedFlyString keyName(name);
         JS::PropertyKey key(keyName);
-        auto result = decode_js_value(object).as_object().get(key);
+        auto result = decode(object).as_object().get(key);
         if (result.is_error()) {
             warnln("Error getting property with name");
             return JS::js_undefined().encoded();
         }
-        return encode_js_value(result.value());
+        return encode(result.value());
     }
 
-    EncodedValue js_function_invoke(EncodedValue func, EncodedValue* arguments, size_t length)
+    Value js_function_invoke(Value func, Value* arguments, size_t length)
     {
-        auto value = decode_js_value(func);
+        auto value = decode(func);
         VERIFY(value.is_function());
 
         AK::Span<JS::Value> args{ reinterpret_cast<JS::Value*>(arguments), length };
@@ -80,15 +80,15 @@ extern "C" {
         // vm.pop_execution_context();
         if (result.is_error()) {
             warnln("Error calling function");
-            return encode_js_value(JS::js_undefined());
+            return encode(JS::js_undefined());
         }
 
-        return encode_js_value(result.value());
+        return encode(result.value());
     }
 
-    void js_promise_on_complete(EncodedValue encoded, PromiseCallback resolved, PromiseCallback rejected)
+    void js_promise_on_complete(Value encoded, PromiseCallback resolved, PromiseCallback rejected)
     {
-        auto result = decode_js_value(encoded);
+        auto result = decode(encoded);
         if (!is<JS::Promise>(result.as_object())) {
             warnln("Value is not a promise");
             return;
@@ -103,13 +103,13 @@ extern "C" {
 
         auto on_fulfilled_steps = [resolved](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
             auto value = vm.argument(0);
-            resolved(encode_js_value(value));
+            resolved(encode(value));
             return JS::js_undefined();
             };
 
         auto on_failure_steps = [rejected](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
             auto value = vm.argument(0);
-            rejected(encode_js_value(value));
+            rejected(encode(value));
             return JS::js_undefined();
             };
 
@@ -120,7 +120,7 @@ extern "C" {
         clean_up_after_running_script(realm);
     }
 
-    EncodedValue js_promise_create(EncodedValue* resolve, EncodedValue* reject)
+    Value js_promise_create(Value* resolve, Value* reject)
     {
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();
@@ -128,8 +128,8 @@ extern "C" {
         auto resolvingFunctions = promise->create_resolving_functions();
         auto resolveValue = JS::Value(resolvingFunctions.resolve);
         auto rejectValue = JS::Value(resolvingFunctions.reject);
-        *resolve = encode_js_value(resolveValue);
-        *reject = encode_js_value(rejectValue);
-        return encode_js_value(promise);
+        *resolve = encode(resolveValue);
+        *reject = encode(rejectValue);
+        return encode(promise);
     }
 }

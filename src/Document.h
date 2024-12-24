@@ -48,7 +48,7 @@ public:
 extern "C" {
     Document* document_create();
 
-    EncodedValue document_evaluate(Document* document, const char* source, const char* source_name);
+    Value document_evaluate(Document* document, const char* source, const char* source_name);
     void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*, int));
-    void document_define_function(Document* document, const char* name, EncodedValue(*function)(EncodedValue));
+    void document_define_function(Document* document, const char* name, Value(*function)(Value));
 }

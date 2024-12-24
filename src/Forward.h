@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
 
-using EncodedValue = u64;
+using Value = u64;
 
 class Document;
 class EnvironmentSettingsObject;

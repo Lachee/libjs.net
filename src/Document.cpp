@@ -179,22 +179,22 @@ extern "C" {
         return document.ptr();
     }
 
-    EncodedValue document_evaluate(Document* document, const char* source, const char* source_name) {
+    Value document_evaluate(Document* document, const char* source, const char* source_name) {
         auto run_or_errored = document->evaluate(StringView{ source, strlen(source) }, StringView{ source_name, strlen(source_name) });
         if (run_or_errored.is_error()) {
             warnln("Failed to evaluate script: {}", run_or_errored.error().string_literal());
-            return encode_js_value(JS::js_undefined());
+            return encode(JS::js_undefined());
         }
 
         document->m_last_value = run_or_errored.value();
-        return encode_js_value(document->m_last_value);
+        return encode(document->m_last_value);
     }
 
     void document_set_on_console_log(Document* document, void (*on_console_log)(JS::Console::LogLevel, const char*, int)) {
         document->set_on_console_log(Function<void(JS::Console::LogLevel, const char*, int)>(on_console_log));
     }
 
-    void document_define_function(Document* document, const char* name, EncodedValue(*function)(EncodedValue)) {
+    void document_define_function(Document* document, const char* name, Value(*function)(Value)) {
         auto window = document->window();
         auto& realm = window->realm();
 
@@ -211,8 +211,8 @@ extern "C" {
             }
 
             JS::Value arguments_value = JS::Value(arguments);
-            EncodedValue encodedResult = function(encode_js_value(arguments_value));
-            auto value = decode_js_value(encodedResult);
+            Value encodedResult = function(encode(arguments_value));
+            auto value = decode(encodedResult);
 
             // ExternErrors throw
             if (value.is_object() && is<ExternError>(value.as_object())) {

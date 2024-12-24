@@ -4,17 +4,17 @@
 #include <AK/Types.h>
 #include <LibGC/Ptr.h>
 
-JS::Value decode_js_value(EncodedValue encoded);
-EncodedValue encode_js_value(JS::Value value);
+JS::Value decode(Value encoded);
+Value encode(JS::Value value);
 
 extern "C" {
     // int js_value_to_string(JS::Value value, char* buff, int buffSize);
-    int js_value_to_string(EncodedValue value, char* buff, int buffSize);
+    int js_value_to_string(Value value, char* buff, int buffSize);
 
-    bool js_value_is_function(EncodedValue encoded);
-    bool js_value_is_constructor(EncodedValue encoded);
-    bool js_value_is_error(EncodedValue encoded);
-    bool js_value_is_array(EncodedValue encoded);
-    bool js_value_is_regexp(EncodedValue encoded);
-    bool js_value_is_promise(EncodedValue encoded);
+    bool js_value_is_function(Value encoded);
+    bool js_value_is_constructor(Value encoded);
+    bool js_value_is_error(Value encoded);
+    bool js_value_is_array(Value encoded);
+    bool js_value_is_regexp(Value encoded);
+    bool js_value_is_promise(Value encoded);
 }
