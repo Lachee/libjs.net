@@ -86,7 +86,7 @@ extern "C" {
         return encode_js_value(result.value());
     }
 
-    void js_object_promise_invoke_on_complete(EncodedValue encoded, PromiseCallback then)
+    void js_promise_on_complete(EncodedValue encoded, PromiseCallback resolved, PromiseCallback rejected)
     {
         auto result = decode_js_value(encoded);
         if (!is<JS::Promise>(result.as_object())) {
@@ -101,20 +101,26 @@ extern "C" {
         // FIXME: Im not sure why we have to push the realm context onto the stack here.
         prepare_to_run_script(realm);
 
-        auto on_fulfilled_steps = [then](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
-            warnln("Promise fulfilled");
+        auto on_fulfilled_steps = [resolved](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
             auto value = vm.argument(0);
-            then(encode_js_value(value));
+            resolved(encode_js_value(value));
+            return JS::js_undefined();
+            };
+
+        auto on_failure_steps = [rejected](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            auto value = vm.argument(0);
+            rejected(encode_js_value(value));
             return JS::js_undefined();
             };
 
         auto on_fulfilled = JS::NativeFunction::create(realm, move(on_fulfilled_steps), 1, "");
-        promise.perform_then(on_fulfilled, on_fulfilled, nullptr);
+        auto on_rejected = JS::NativeFunction::create(realm, move(on_failure_steps), 1, "");
+        promise.perform_then(on_fulfilled, on_rejected, nullptr);
 
         clean_up_after_running_script(realm);
     }
 
-    EncodedValue js_object_promise_create(EncodedValue* resolve, EncodedValue* reject)
+    EncodedValue js_promise_create(EncodedValue* resolve, EncodedValue* reject)
     {
         auto& vm = main_thread_vm();
         auto realm = vm.current_realm();

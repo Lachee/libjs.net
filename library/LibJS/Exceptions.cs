@@ -1,3 +1,4 @@
+using LibJS.Types;
 using System;
 
 namespace LibJS {
@@ -15,4 +16,13 @@ namespace LibJS {
         public InvalidTypeException() : base("Cannot perform operation on this type of JS Value.") { }
         public InvalidTypeException(string expected) : base($"Cannot perform operation on this type of JS Value. Expected a {expected}.") { }
 	}
+
+    public sealed class JSException : Exception {
+        public Value Value { get; }
+        public JSException(Value value) 
+            : base($"Error: {value}")
+        {
+            Value = value;
+        }
+    }
 }

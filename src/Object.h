@@ -19,6 +19,6 @@ extern "C" {
 
     EncodedValue js_function_invoke(EncodedValue func, EncodedValue* arguments, size_t length);
 
-    void js_object_promise_invoke_on_complete(EncodedValue encoded, PromiseCallback then);
-    EncodedValue js_object_promise_create(EncodedValue* resolve, EncodedValue* reject);
+    void js_promise_on_complete(EncodedValue encoded, PromiseCallback resolved, PromiseCallback rejected);
+    EncodedValue js_promise_create(EncodedValue* resolve, EncodedValue* reject);
 }

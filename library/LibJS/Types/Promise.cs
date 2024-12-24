@@ -18,8 +18,8 @@ namespace LibJS.Types
     public class Promise : Object
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate void PromiseCallback(ulong value);
-        [DllImport(Consts.LibraryName)] private static extern void js_object_promise_invoke_on_complete(Value value, IntPtr then);
-        [DllImport(Consts.LibraryName)] private static extern Value js_object_promise_create(out Value resolve, out Value reject);
+        [DllImport(Consts.LibraryName)] private static extern void js_promise_on_complete(Value value, IntPtr resolved, IntPtr rejected);
+        [DllImport(Consts.LibraryName)] private static extern Value js_promise_create(out Value resolve, out Value reject);
         [DllImport(Consts.LibraryName)] private static extern void run_queued_promise_jobs();
 
         internal Promise(ulong value) : base(value) { }
@@ -32,8 +32,12 @@ namespace LibJS.Types
         public Task<Value> AsTask()
         {
             var tcs = new TaskCompletionSource<Value>();
-            PromiseCallback callback = new PromiseCallback((value) => tcs.SetResult(new Value(value)));
-            js_object_promise_invoke_on_complete(value, Marshal.GetFunctionPointerForDelegate(callback));
+            PromiseCallback resolveCallback = new PromiseCallback(v => tcs.SetResult(new (v)));
+            PromiseCallback rejectCallback = new PromiseCallback(v => tcs.SetException(new JSException(new (v))));
+            js_promise_on_complete(value,
+                Marshal.GetFunctionPointerForDelegate(resolveCallback),
+                Marshal.GetFunctionPointerForDelegate(rejectCallback)
+			);
             return tcs.Task;
         }
 
@@ -42,7 +46,7 @@ namespace LibJS.Types
 
         public static Promise Create(Task<Value> task)
         {
-            var promise = js_object_promise_create(out var resolveValue, out var rejectValue);
+            var promise = js_promise_create(out var resolveValue, out var rejectValue);
             _ = Task.Run(async () =>
             {
                 try
